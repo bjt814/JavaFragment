@@ -1,0 +1,272 @@
+利用binlog增量备份，还原实例（日志备份数据库）
+日期：2017-03-31 19:54浏览：368评论：0
+一，什么是增量备份
+增量备份，就是将新增加的数据进行备份。假如你一个数据库，有10G的数据，每天会增加10M的数据，数据库每天都要备份一次，这么多数据是不是都要备份呢？还是只要备份增加的数据呢，很显然，我只要备份增加的数据。这样减少服务器的负担。
+ 
+二，启用binlog
+vi my.cnf
+log-bin=/var/lib/mysql/mysql-bin.log，如果是这样的话log-bin=mysql-bin.log默认在datadir目录下面
+[root@BlackGhost mysql]# ls |grep mysql-bin
+mysql-bin.000001
+mysql-bin.000002
+mysql-bin.000003
+mysql-bin.000004
+mysql-bin.000005
+mysql-bin.000006
+mysql-bin.index
+启动后会产生mysql-bin这样的文件，每启动一次，就会增加一个或者多个。
+mysql-bin.000002这样文件存放的是数据库每天增加的数据，所有数据库的数据增量都在这里面。
+三，查看mysql-bin.000002这样的文件里面到底是什么东西
+[root@BlackGhost mysql]# mysqlbinlog   /var/lib/mysql/mysql-bin.000002 > /tmp/add.sql
+[root@BlackGhost mysql]# cat /tmp/add.sql   // 下面是根据mysql-bin生成的文件（部分内容）  
+/*!40019 SET @@session.max_insert_delayed_threads=0*/;  
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;  
+DELIMITER /*!*/;  
+# at 4  
+#100929 21:23:52 server id 1  end_log_pos 106     Start: binlog v 4, server v 5.1.50-log created 100929 21:23:52 at startup  
+# Warning: this binlog was not closed properly. Most probably mysqld crashed writing it.  
+ROLLBACK/*!*/;  
+BINLOG ' 
+6D2jTA8BAAAAZgAAAGoAAAABAAQANS4xLjUwLWxvZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 
+AAAAAAAAAAAAAAAAAADoPaNMEzgNAAgAEgAEBAQEEgAAUwAEGggAAAAICAgC 
+'/*!*/;  
+# at 106  
+#100929 21:29:35 server id 1  end_log_pos 134     Intvar  
+SET INSERT_ID=16/*!*/;  
+# at 134  
+#100929 21:29:35 server id 1  end_log_pos 237     Query    thread_id=1    exec_time=0    error_code=0  
+use test/*!*/;           //这里是test数据库  
+SET TIMESTAMP=1285766975/*!*/;  
+SET @@session.pseudo_thread_id=1/*!*/;  
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=1, @@session.unique_checks=1/*!*/;  
+SET @@session.sql_mode=0/*!*/;  
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;  
+/*!\C utf8 *//*!*/;  
+SET @@session.character_set_client=33,@@session.collation_connection=33,@@session.collation_server=33/*!*/;  
+SET @@session.lc_time_names=0/*!*/;  
+SET @@session.collation_database=DEFAULT/*!*/;  
+insert into aa(name)values('cccccccccc')  
+/*!*/;  
+# at 237  
+#100929 21:32:21 server id 1  end_log_pos 265     Intvar  
+SET INSERT_ID=12/*!*/;  
+# at 265  
+#100929 21:32:21 server id 1  end_log_pos 370     Query    thread_id=1    exec_time=0    error_code=0  
+SET TIMESTAMP=1285767141/*!*/;  
+insert into user(name)values('cccccccccc')  
+/*!*/;  
+# at 370  
+#100929 21:35:25 server id 1  end_log_pos 440     Query    thread_id=1    exec_time=0    error_code=0  
+SET TIMESTAMP=1285767325/*!*/;  
+BEGIN  
+/*!*/;  
+# at 440  
+#100929 21:35:25 server id 1  end_log_pos 468     Intvar  
+SET INSERT_ID=45/*!*/;  
+# at 468  
+#100929 21:35:25 server id 1  end_log_pos 573     Query    thread_id=1    exec_time=0    error_code=0  
+use blog/*!*/;             //这里是blog数据库  
+SET TIMESTAMP=1285767325/*!*/;  
+insert into city(CityName)values('asdf')  
+/*!*/;  
+# at 573  
+#100929 21:35:25 server id 1  end_log_pos 600     Xid = 205  
+COMMIT/*!*/;  
+DELIMITER ;  
+# End of log file  
+ROLLBACK /* added by mysqlbinlog */;  
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;  
+下面还有一个重要索引文件就是mysql-bin.index
+[root@BlackGhost mysql]# cat mysql-bin.index  
+./mysql-bin.000001  
+./mysql-bin.000002  
+./mysql-bin.000003  
+./mysql-bin.000004  
+./mysql-bin.000005  
+./mysql-bin.000006  
+四，增量备份和增量还原
+1，增量备份
+既然我们知道了，mysql里面新增加的数据在mysql-bin这样的文件里面，我们只要把mysql-bin这样的文件进行备份就可以了。
+cp /var/lib/mysql/mysql-bin* /data/mysql_newbak/
+2，增量还原，讲几个常用的，比较有用的
+a），根据时间来还原 --start-date,--stop-date
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog --start-date="2010-09-29 18:00:00" --stop-date="2010-09-29 23:00:00" /var/lib/mysql/mysql-bin.000002 |mysql -u root -p
+根据条件看一下数据
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog  --start-date="2010-09-29 18:00:00"  
+--stop-date="2010-09-29 23:00:00"  /var/lib/mysql/mysql-bin.000002  
+//下面是部分内容，其实也就是一些对数据进行操作的sql语句  
+# at 237  
+#100929 21:32:21 server id 1  end_log_pos 265     Intvar  
+SET INSERT_ID=12/*!*/;  
+# at 265  
+#100929 21:32:21 server id 1  end_log_pos 370     Query    thread_id=1    exec_time=0    error_code=0  
+SET TIMESTAMP=1285767141/*!*/;  
+insert into user(name)values('cccccccccc')  
+/*!*/;  
+# at 370  
+#100929 21:35:25 server id 1  end_log_pos 440     Query    thread_id=1    exec_time=0    error_code=0  
+SET TIMESTAMP=1285767325/*!*/;  
+BEGIN  
+/*!*/;  
+# at 440  
+#100929 21:35:25 server id 1  end_log_pos 468     Intvar  
+SET INSERT_ID=45/*!*/;  
+# at 468  
+#100929 21:35:25 server id 1  end_log_pos 573     Query    thread_id=1    exec_time=0    error_code=0  
+b），根据起始位置来还原，--start-position,--stop-position
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog --start-position=370 --stop-position=440  /var/lib/mysql/mysql-bin.000002 |mysql -u root -p
+//查看插入的内容，根a）中是一样的
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog --start-position=370 --stop-position=440  /var/lib/mysql/mysql-bin.000002
+--start-position=370 --stop-position=440 这里面数字从哪儿来的呢？
+# at 370
+#100929 21:35:25 server id 1  end_log_pos 440 Query    thread_id=1    exec_time=0    error_code=0
+SET TIMESTAMP=1285767325/*!*/;
+上面的红色加粗的就是，一个是start-position，一个是stop-position
+c），根据数据库名来进行还原 -d
+在这里是小写的d，请不要把它和mysqldump中的－D搞混了。哈哈。
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog -d test  /var/lib/mysql/mysql-bin.000002
+查看内容，请参考a）
+d），根据数据库所在IP来分－h
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog -h 192.1681.102  /var/lib/mysql/mysql-bin.000002
+查看内容，请参考a）
+e），根据数据库所占用的端口来分－P
+有的时候，我们的mysql用的不一定是3306端口，注意是大写的P
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog -p 13306  /var/lib/mysql/mysql-bin.000002
+查看内容，请参考a）
+f），根据数据库serverid来还原--server-id
+在数据库的配置文件中，都有一个serverid并且同一集群中serverid是不能相同的。
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog --server-id=1  /var/lib/mysql/mysql-bin.000002
+查看内容，请参考a）
+注意：上面的几个例子，我都是一个一个说的，其实可以排列组合的。例如
+[root@BlackGhost mysql]# /usr/local/mysql/bin/mysqlbinlog --start-position="2010-09-29 18:00:00" -d test -h 127.0.0.1 /var/lib/mysql/mysql-bin.000002 ｜mysql -u root -p
+五，后续
+增量备份的时候，有一点让人不爽，就是mysql-bin这样的文件，每启动一次mysql就会增加一些，如果你不去管他的话，时间长了，他会把你的磁盘占满。
+./mysqldump --flush-logs -u root  myblog > /tmp/myblog.sql
+备份myblog数据库，清除增量备份里面的有关myblog的数据
+./mysqldump --flush-logs -u root  --all-databases > /tmp/alldatabase.sql
+备份所有数据库，清除增量备份
+mysql-bin.index的起索引作用，因为增量的数据不一定在一个mysql-bin000这样的文件里面，这个时候，我们就要根据mysql-bin.index来找mysql-bin这样的增量文件了。
+如果mysql里面做了这样的配置binlog-do-db=test1，增量备份里面只会有test1这个数据库的数据
+ 
+转载请注明
+作者:海底苍鹰
+地址:http://blog.51yip.com/mysql/1042.html
+ 
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+实现MySQL热备份的最好方法，我一直都认为是Replication，xtrabackup等各种热备脚本，都没有Replication安全方便。
+面对一个大规模集群的备份，由于实例太对，没办法创建这么多实例去Replication。之前我的想法一直是通过修改MySQL的源码，扩展MySQL Replication可以创建多个M-S复制，这对MySQL本身有入侵，没办法保证我的代码能有非常高的可靠性，更严重的是要改变MySQL的语法，来支持多Master的Change语句，对.yy文件的修改风险就更大了。
+在这条路不断的碰壁之时，突然想到，mysqlbinlog不是一个很好的工具吗，为什么还要靠修改源码，一个利用mysqlbinlog进行大规模备份的想法就诞生了，但是是否可靠还要去验证下。
+怎么做呢，首先了解下MySQL Replication怎么做的，首先一个Slave IO线程从Master读取binlog，然后解析到Relay-log，另一个Slave SQL线程异步的从Relay-log中读取SQL应用到本地。
+mysqlbinlog有一个参数read-from-remote-server，可以从远程读取binlog，只要创建一个有Replication Client权限的用户即可，这就模拟了Slave IO线程的作用。
+mysqlbinglog –read-from-remote-server -u repl -p -h target_node –start-datetime=’2010-09-01 00:00:00′ –stop-datetime=’2010-09-01 23:59:59′
+通过这条命令就可以获取到2010-09-01这一天的全部SQL，这些SQL可以直接导入到数据库，也可以写到Relaylog，让SLave SQL线程去执行。
+假设我们原来是每5分钟备份一次新产生的binlog，每天一次全备，所有备份都在一个备份机上，利用上述方法，就可以如下操作：
+1. 在备份机启动一个实例，指向任意一个没有操作的Master，使Relay-log文件生成。
+2. 每个要备份的实例从备份机每5分钟发起一次mysqlbinlog请求，获取上5分钟的binlog，写入到一个临时文件，然后等临时文件写完了，去touch一个锁，写Relaylog。
+3. 每天Slave Start一次，Slave Start之前touch一个锁，让Relay-log的写阻塞，等待Slave start执行完毕，删除Relay-log的写锁。
+4. 删除前一天产生的临时文件。
+这样操作就可以保证，每五分钟产生的SQL都被分开记录，方便查找，每天的Slave start则消化掉这些SQL。
+如果想方便一点，不写Relay-log也是可以的，直接每天把SQL丢给MySQL执行一次就好，效果也一样。
+原文出处：http://www.penglixun.com/tech/database/backup_mysql_use_mysqlbinlog.h
+ 
+-------------------------------------------------------------------------------------
+mysql备份与恢复（binlog）
+  (2011-08-06 13:52:05)
+ 
+它是逻辑备份,优点可以备份各种存储引擎
+ 
+1.备份所有的数据库
+#mysqldump -uroot -p --all-database >all.sql
+ 
+2.备份指定的数据库
+#mysqldump -uroot -p test > test.sql
+ 
+3.备份指定数据库中的表
+#mysqldump -uroot -p test s > test_s.sql
+ 
+备份完全恢复实例
+(1)上午9点备份数据库
+#mysqldump -uroot -p -l -F student > student.dmp
+-l 给所有表加读锁
+-F 生成一个新的日志文件
+此时s表数据如下:
+mysql> select * from s;
++------+-------+------+-----------+
+| sno  | sname | sex  | address   |
++------+-------+------+-----------+
+| 0901 | Jim   | 1    | shanghai  |
+| 0902 | helun | 2    | beijing   |
+| 0903 | sam   | 1    | sichuan   |
+| 0904 | keke  | 1    | xizang    |
+| 0905 | gugu  | 1    | suzhou    |
+| 0906 | tang  | 2    | guangdong |
++------+-------+------+-----------+
+6 rows in set (0.00 sec)
+ 
+备份完毕等到了student.dmp文件,还有mysql-bin.000012
+ 
+(2)9点半备份完毕,然后插入新的数据
+mysql> insert into s values('0907','liu','1','jiangxi');
+Query OK, 1 row affected (0.00 sec)
+ 
+mysql> insert into s values('0908','wang','2','wuxi');
+Query OK, 1 row affected (0.00 sec)
+ 
+(3)10点,数据库突然故障,数据无法访问.需要恢复备份:
+#mysql -uroot -p student < student.dmp
+恢复后的数据:
+mysql> select * from s;
++------+-------+------+-----------+
+| sno  | sname | sex  | address   |
++------+-------+------+-----------+
+| 0901 | Jim   | 1    | shanghai  |
+| 0902 | helun | 2    | beijing   |
+| 0903 | sam   | 1    | sichuan   |
+| 0904 | keke  | 1    | xizang    |
+| 0905 | gugu  | 1    | suzhou    |
+| 0906 | tang  | 2    | guangdong |
++------+-------+------+-----------+
+6 rows in set (0.00 sec)
+ 
+(4)使用mysqlbinlog 恢复mysqldump 备份以来的BINLOG
+#mysqlbinlog mysql-bin.000012 |mysql -uroot -p student
+查询完全恢复后的数据:
+mysql> select * from s;
++------+-------+------+-----------+
+| sno  | sname | sex  | address   |
++------+-------+------+-----------+
+| 0901 | Jim   | 1    | shanghai  |
+| 0902 | helun | 2    | beijing   |
+| 0903 | sam   | 1    | sichuan   |
+| 0904 | keke  | 1    | xizang    |
+| 0905 | gugu  | 1    | suzhou    |
+| 0906 | tang  | 2    | guangdong |
+| 0907 | liu   | 1    | jiangxi   |
+| 0908 | wang  | 2    | wuxi      |
++------+-------+------+-----------+
+8 rows in set (0.00 sec)
+恢复完成!
+ 
+基于时间点的恢复(不完全恢复)
+由于误操作,比如删除了一张表,使用完全恢复是没有用的,我们需要的是恢复到误操作之前的状态,然后跳过误操作语句,再恢复后面执行的语句,完成恢复;
+例:
+(1)上午10点发生误操作,可以用如下语句备份和BINLOG将数据恢复到故障前
+#mysqlbinlog --stop-date="2010-10-31 9:59:59" /usr/local/mysql/var/mysql-bin.000013 |mysql -uroot -p
+ 
+ 
+(2)跳过故障时间点,继续执行后面的BINLOG,完成恢复
+#mysqlbinlog --start-date="2010-10-31 10:01:00" /usr/local/mysql/var/mysql-bin.000013 |mysql -uroot -p
+ 
+基于位置恢复(不完全恢复)
+和基于时间点恢复类是,但是更加精确.因为同一时间点可能有多条SQL语句执行;
+例:
+#mysqlbinlog --start-date="2010-10-31 9:55:00"  --stop-date="2010-10-31 10:05:00" /usr/local/mysql/var/mysql-bin.000013 > /tmp/mysql_restore.sql
+ 
+该命令将在/tmp/目录下创建小的文件,编辑它找到错误语句前后的位置号,例如前后位置号分别是368312 和 368315
+(2)恢复了以前的备份文件后,输入
+#mysqlbinlog --stop-position="368312" /usr/local/mysql/var/mysql-bin.000013 |mysql -uroot -p
+ 
+#mysqlbinlog --start-position="368315" /usr/local/mysql/var/mysql-bin.000013 |mysql -uroot -p
+ 
+来自 <http://xinklabi.iteye.com/blog/2154144> 
