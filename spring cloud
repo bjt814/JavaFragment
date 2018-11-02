@@ -1,0 +1,2541 @@
+
+
+基于Spring Cloud构建微服务架构原理与实践
+
+1	基于Spring Cloud构建微服务架构原理与实践	1
+1.1	Spring Cloud简介	4
+1.2	Spring Cloud组件	4
+1.3	Spring Cloud与RPC框架	5
+1.4	微服务架构	5
+1.5	主要实践	5
+2	IsalesCloud基础框架原理与实现	5
+2.1	目的	6
+2.2	兼容	6
+2.3	设计	6
+2.3.1	基础服务框架设计	6
+3	Spring Cloud构建微服务架构（一）服务发现原理	6
+4	Spring Cloud构建微服务架构（一）服务注册与发现	7
+4.1	服务注册与发现	7
+4.1.1	创建“服务注册中心”	7
+Application	8
+application.properties	9
+验证实例	10
+4.1.2	创建“服务提供方”	10
+ComputeController	12
+ComputeServiceApplication	12
+application.properties	13
+验证实例	14
+5	Spring Cloud构建微服务架构（一）高可用注册发现	14
+5.1	前言	15
+5.2	Eureka Server高可用	15
+5.3	服务注册与发现	17
+5.3.1	验证：Eureka server高可用	17
+5.4	深入理解(集群中节点同步)	18
+5.4.1	双向（两两对等注册）	19
+验证	19
+5.4.2	单向	23
+验证	24
+5.5	验证实例	25
+5.6	落地考虑&实现	25
+6	Spring Cloud构建微服务架构（二）服务消费者	26
+6.1	Ribbon	26
+准备工作	26
+使用Ribbon实现客户端负载均衡的消费者	27
+6.1.1	RibbonApplication	28
+6.1.2	ConsumerController	29
+6.1.3	application.properties中配置eureka服务注册中心	29
+6.1.4	验证实例	30
+6.2	Feign	31
+6.2.1	配置pom.xml	31
+6.2.2	FeignApplication	32
+6.2.3	ComputeClient	33
+6.2.4	ConsumerController	33
+6.2.5	application.properties	33
+6.2.6	验证实例	34
+7	Spring Cloud构建微服务架构（三）断路器	34
+7.1	背景	34
+7.2	什么是断路器	35
+7.3	Netflix Hystrix	35
+7.3.1	准备工作	35
+7.3.2	Ribbon中引入Hystrix	35
+7.3.3	pom.xml中引入依赖hystrix依赖	36
+7.3.4	RibbonApplication	36
+7.3.5	ComputeService	37
+7.3.6	ConsumerController	37
+7.3.7	验证断路器的回调	38
+7.4	Feign使用Hystrix	38
+7.4.1	ComputeClient	39
+7.4.2	ComputeClientHystrix	39
+7.5	验证实例	40
+8	Spring Cloud构建微服务架构（四）分布式配置原理	40
+8.1	前言	40
+8.2	什么是Spring Cloud Config	40
+8.3	为什么会诞生Spring Cloud Config	41
+8.4	Spring Cloud Config Overview	41
+9	Spring Cloud构建微服务架构（四）分布式配置中心	42
+9.1	构建Config Server	43
+9.1.1	Application	43
+9.1.2	application.properties	44
+9.2	服务端验证	45
+9.2.1	config-repo目录	45
+9.3	微服务端映射配置	46
+9.3.1	Application	48
+9.3.2	bootstrap.properties	48
+9.3.3	TestController	49
+9.4	验证实例	49
+10	Spring Cloud构建微服务架构（四）分布式配置中心（续）	49
+10.1	高可用问题	50
+10.1.1	传统作法	50
+10.1.2	注册为服务	50
+config-server配置	51
+application.properties	51
+Application	52
+config-client配置	52
+bootstrap.properties	53
+Application	53
+TestController	54
+10.2	配置刷新	55
+10.3	验证实例	56
+11	Spring Cloud构建微服务架构（五）服务网关	56
+11.1	场景	57
+11.2	准备工作	58
+11.3	开始使用Zuul	59
+11.3.1	Application	59
+11.3.2	application.properties	60
+11.4	Zuul配置	60
+11.4.1	服务路由	60
+url映射	60
+serviceId映射	61
+11.4.2	服务过滤	62
+11.5	验证实例	65
+12	Spring Cloud构建微服务架构（六）集成RabbitMQ	65
+12.1	Message Broker与AMQP简介	65
+12.2	RabbitMQ	66
+12.3	安装	66
+12.4	Rabbit管理	67
+12.5	Rabbit与Spring Boot集成	69
+12.6	验证实例	72
+13	Spring Cloud构建微服务架构（六）消息总线（Rabbit）	72
+13.1	RabbitMQ实现	73
+13.2	原理分析	74
+13.3	指定刷新范围	75
+13.4	架构优化	75
+13.5	验证实例	76
+14	Spring Cloud构建微服务架构（七）消息总线（Kafka）	77
+14.1	Kafka简介	77
+14.2	快速入门	77
+14.3	环境安装	77
+14.4	启动测试	78
+14.5	整合Spring Cloud Bus	79
+14.5.1	Kafka配置	82
+14.6	验证实例	82
+15	Spring Cloud构建微服务架构（八）链路追踪（Sleuth）	82
+15.1	场景	82
+15.2	服务追踪分析	83
+15.3	Spring Cloud Sleuth & Zipkin	84
+15.3.1	Spring Cloud Sleuth概念图	85
+15.4	服务REST调用	85
+15.4.1	引入Sleuth和Zipkin依赖包	86
+15.4.2	构建Docker镜像	86
+15.5	Zipkin Server	87
+15.5.1	构建Docker镜像	87
+15.6	在阿里云容器服务上部署	87
+15.7	验证实例	90
+
+
+1.1	Spring Cloud简介
+Spring Cloud是一个基于Spring Boot实现的云应用开发工具，它为基于JVM的云应用开发中的配置管理、服务发现、断路器、智能路由、微代理、控制总线、全局锁、决策竞选、分布式会话和集群状态管理等操作提供了一种简单的开发方式。
+Spring Cloud包含了多个子项目（针对分布式系统中涉及的多个不同开源产品）
+
+1.2	Spring Cloud组件
+Spring Cloud Config：配置管理开发工具包，可以让你把配置放到远程服务器，目前支持本地存储、Git以及Subversion
+Spring Cloud Bus：事件、消息总线，用于在集群（例如，配置变化事件）中传播状态变化，可与Spring Cloud Config联合实现热部署
+Spring Cloud Netflix：针对多种Netflix组件提供的开发工具包，其中包括Eureka、Hystrix、Zuul、Archaius等
+Netflix Eureka（注册发现）：云端负载均衡，一个基于 REST 的服务，用于定位服务，以实现云端的负载均衡和中间层服务器的故障转移
+Netflix Hystrix：容错管理工具，旨在通过控制服务和第三方库的节点,从而对延迟和故障提供更强大的容错能力
+Netflix Zuul（路由）：边缘服务工具，是提供动态路由，监控，弹性，安全等的边缘服务
+Netflix Archaius：配置管理API，包含一系列配置管理API，提供动态类型化属性、线程安全配置操作、轮询框架、回调机制等功能
+Spring Cloud for Cloud Foundry：通过Oauth2协议绑定服务到CloudFoundry，CloudFoundry是VMware推出的开源PaaS云平台
+Spring Cloud Sleuth（链路分析与发现）：日志收集工具包，封装了Dapper,Zipkin和HTrace操作
+Spring Cloud Data Flow：大数据操作工具，通过命令行方式操作数据流
+Spring Cloud Security：安全工具包，为你的应用程序添加安全控制，主要是指OAuth2
+Spring Cloud Consul：封装了Consul操作，consul是一个服务发现与配置工具，与Docker容器可以无缝集成
+Spring Cloud Zookeeper：操作Zookeeper的工具包，用于使用zookeeper方式的服务注册和发现
+Spring Cloud Stream：数据流操作开发包，封装了与Redis,Rabbit、Kafka等发送接收消息
+Spring Cloud CLI：基于 Spring Boot CLI，可以让你以命令行方式快速建立云组件
+
+1.3	Spring Cloud与RPC框架
+请参考《Spring Cloud微服务框架主要子项目和RPC框架的对比》
+
+
+1.4	微服务架构
+“微服务架构”在这几年非常的火热，以至于关于微服务架构相关的产品社区也变得越来越活跃（比如：netflix、dubbo），Spring Cloud也因Spring社区的强大知名度和影响力也被广大架构师与开发者备受关注。
+那么什么是“微服务架构”呢？简单的说，微服务架构就是将一个完整的应用从数据存储开始垂直拆分成多个不同的服务，每个服务都能独立部署、独立维护、独立扩展，服务与服务间通过诸如RESTful API的方式互相调用。
+对于“微服务架构”，大家在互联网可以搜索到很多相关的介绍和研究文章来进行学习和了解。也可以阅读始祖Martin Fowler的《Microservices》，本文不做更多的介绍和描述。
+
+
+
+
+1.5	主要实践
+
+服务注册&发现(NetFlix   Eureka)
+客户端负载均衡(NetFlix  Ribbon)
+断路器(NetFlix  Hystrix)
+分布式配置中心 (config)
+服务路由(NetFlix  Zuul)
+消息总线(Bus)
+链路追踪（Sleuth）
+
+
+
+2	IsalesCloud基础框架原理与实现
+
+2.1	目的
+适应与追上分布式云计算、DevOps容器Docker 等IAAS、PAAS的变化洪流，为解决isales前端业务系统遇到的种种开发，调试，部署普铁版问题和各种难以解决的骨渣级性能问题，因此需一整套全新的基于Spring Cloud设计高铁版isalesCloud统一分布式微服务基础服务框架，基础开发框架与基础运维框架、基础运营框架
+
+2.2	兼容
+新性框架应兼容老框架jalor迁移、过渡重写，这个过程会很痛苦~
+
+2.3	设计
+
+2.3.1	基础服务框架设计
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3	Spring Cloud构建微服务架构（一）服务发现原理
+
+请参考《服务发现：Eureka客户端&服务端》
+
+
+
+4	Spring Cloud构建微服务架构（一）服务注册与发现
+
+4.1	服务注册与发现
+在简单介绍了Spring Cloud和微服务架构之后，下面回归本文的主旨内容，如何使用Spring Cloud搭建服务注册与发现模块。
+这里我们会用到Spring Cloud Netflix，该项目是Spring Cloud的子项目之一，主要内容是对Netflix公司一系列开源产品的包装，它为Spring Boot应用提供了自配置的Netflix OSS整合。通过一些简单的注解，开发者就可以快速的在应用中配置一下常用模块并构建庞大的分布式系统。它主要提供的模块包括：服务发现（Eureka），断路器（Hystrix），智能路由（Zuul），客户端负载均衡（Ribbon）等。
+所以，我们这里的核心内容就是服务发现模块：Eureka。下面我们动手来做一些尝试。
+4.1.1	创建“服务注册中心”
+创建一个基础的Spring Boot工程，并在pom.xml中引入需要的依赖内容：
+
+
+
+
+
+	<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.5.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-test</artifactId>
+	<scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-eureka-server</artifactId>
+    </dependency>
+</dependencies>
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+	    <groupId>org.springframework.cloud</groupId>
+	    <artifactId>spring-cloud-dependencies</artifactId>
+	    <version>Brixton.RELEASE</version>
+	    <type>pom</type>
+	    <scope>import</scope>
+	</dependency>
+    </dependencies>
+</dependencyManagement>
+
+
+Application
+通过@EnableEurekaServer注解启动一个服务注册中心提供给其他应用进行对话。这一步非常的简单，只需要在一个普通的Spring Boot应用中添加这个注解就能开启此功能，比如下面的例子：
+
+
+@EnableEurekaServer
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+}
+	
+在默认设置下，该服务注册中心也会将自己作为客户端来尝试注册它自己，所以我们需要禁用它的客户端注册行为，只需要在application.properties中增加如下配置：
+server.port=1111
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+eureka.client.serviceUrl.defaultZone=http://localhost:${server.port}/eureka/
+
+
+为了与后续要进行注册的服务区分，这里将服务注册中心的端口通过server.port属性设置为1111。
+启动工程后，访问：http://localhost:1111/
+可以看到下面的页面，其中还没有发现任何服务
+ 
+
+
+
+验证实例
+
+该工程可参见：Chapter9-1-1/eureka-server
+
+
+
+4.1.2	创建“服务提供方”
+下面我们创建提供服务的客户端，并向服务注册中心注册自己。
+假设我们有一个提供计算功能的微服务模块，我们实现一个RESTful API，通过传入两个参数a和b，最后返回a + b的结果。
+首先，创建一个基本的Spring Boot应用，在pom.xml中，加入如下配置：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32	<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.5.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-test</artifactId>
+	<scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-starter-eureka</artifactId>
+    </dependency>
+</dependencies>
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+	    <groupId>org.springframework.cloud</groupId>
+	    <artifactId>spring-cloud-dependencies</artifactId>
+	    <version>Brixton.RELEASE</version>
+	    <type>pom</type>
+	    <scope>import</scope>
+	</dependency>
+    </dependencies>
+</dependencyManagement>
+
+ComputeController
+
+其次，实现/add请求处理接口，通过DiscoveryClient对象，在日志中打印出服务实例的相关内容。
+
+
+@RestController
+public class ComputeController {
+    private final Logger logger = Logger.getLogger(getClass());
+    @Autowired
+    private DiscoveryClient client;
+    @RequestMapping(value = "/add" ,method = RequestMethod.GET)
+    public Integer add(@RequestParam Integer a, @RequestParam Integer b) {
+        ServiceInstance instance = client.getLocalServiceInstance();
+        Integer r = a + b;
+        logger.info("/add, host:" + instance.getHost() + ", service_id:" + instance.getServiceId() + ", result:" + r);
+        return r;
+    }
+}	
+
+
+ComputeServiceApplication
+
+最后在主类中通过加上@EnableDiscoveryClient注解，该注解能激活Eureka中的DiscoveryClient实现，才能实现Controller中对服务信息的输出。
+
+
+
+
+@EnableDiscoveryClient
+@SpringBootApplication
+public class ComputeServiceApplication {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(ComputeServiceApplication.class).web(true).run(args);
+	}
+}
+
+	
+我们在完成了服务内容的实现之后，再继续对
+application.properties
+做一些配置工作，具体如下：
+spring.application.name=compute-service
+server.port=2222
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/	
+
+
+
+通过spring.application.name属性，我们可以指定微服务的名称后续在调用的时候只需要使用该名称就可以进行服务的访问。
+eureka.client.serviceUrl.defaultZone属性对应服务注册中心的配置内容，指定服务注册中心的位置。
+为了在本机上测试区分服务提供方和服务注册中心，使用server.port属性设置不同的端口。
+启动该工程后，再次访问：http://localhost:1111/
+可以看到，我们定义的服务被注册了。
+ 
+
+
+验证实例
+该工程可参见：Chapter9-1-1/compute-service
+
+
+
+5	Spring Cloud构建微服务架构（一）高可用注册发现
+
+
+5.1	前言
+在Spring Cloud系列文章的开始，我们就介绍了服务注册与发现，其中，主要演示了如何构建和启动服务注册中心Eureka Server，以及如何将服务注册到Eureka Server中，但是在之前的示例中，这个服务注册中心是单点的，显然这并不适合应用于线上生产环境，那么下面在前文的基础上，我们来看看该如何构建高可用的Eureka Server集群。
+
+
+
+5.2	Eureka Server高可用
+Eureka Server除了单点运行之外，还可以通过运行多个实例，并进行互相注册的方式来实现高可用的部署，所以我们只需要将Eureke Server配置其他可用的serviceUrl就能实现高可用部署。
+下面以Chapter1-1-1中的eureka-server为基础，对其改造，构建双节点的服务注册中心。
+
+
+
+1、创建application-peer1.properties，作为peer1服务中心的配置，并将serviceUrl指向peer2
+spring.application.name=eureka-server
+server.port=1111
+eureka.instance.hostname=peer1
+eureka.client.serviceUrl.defaultZone=http://peer2:1112/eureka/
+
+
+2、创建application-peer2.properties，作为peer2服务中心的配置，并将serviceUrl指向peer1
+1
+2
+3
+4
+5	spring.application.name=eureka-server
+server.port=1112
+eureka.instance.hostname=peer2
+eureka.client.serviceUrl.defaultZone=http://peer1:1111/eureka/
+
+
+
+
+	
+3、在(linux)/etc/hosts文件(win:C:\Windows\System32\drivers\etc\hosts)中添加对peer1和peer2的转换
+1
+2	127.0.0.1 peer1
+127.0.0.1 peer2
+
+
+4、通过spring.profiles.active属性来分别启动peer1和peer2
+
+	java -jar eureka-server-1.0.0.jar --spring.profiles.active=peer1
+java -jar eureka-server-1.0.0.jar --spring.profiles.active=peer2
+
+
+在工程文件下，分别执行上面jar，相当于2个服务器
+ 
+
+
+
+
+
+
+
+此时访问peer1的注册中心：http://localhost:1111/，
+如下图所示，我们可以看到registered-replicas中已经有peer2节点的eureka-server了。
+同样地，访问peer2的注册中心：http://localhost:1112/，
+能看到registered-replicas中已经有peer1节点，并且这些节点在可用分片（available-replicase）之中。
+我们也可以尝试关闭peer1，刷新http://localhost:1112/，可以看到peer1的节点变为了不可用分片（unavailable-replicas）
+
+
+http://localhost:1111/
+ 
+http://localhost:1112/
+ 
+
+
+
+
+
+5.3	服务注册与发现
+在设置了多节点的服务注册中心之后，我们需要简单需求服务配置，就能将服务注册到Eureka Server集群中。我们以Chapter1-1-1中的compute-service为基础，修改application.properties配置文件：
+1
+2
+3
+4	spring.application.name=compute-service
+server.port=2222
+eureka.client.serviceUrl.defaultZone=http://peer1:1111/eureka/,http://peer2:1112/eureka/
+
+
+
+5.3.1	验证：Eureka server高可用
+
+上面的配置主要对eureka.client.serviceUrl.defaultZone属性做了改动，将注册中心指向了之前我们搭建的peer1与peer2。
+下面，我们启动该服务，通过访问http://localhost:1111/和http://localhost:1112/，可以观察到compute-service同时被注册到了peer1和peer2上。
+若此时断开peer1，由于compute-service同时也向peer2注册，因此在peer2上其他服务依然能访问到compute-service，从而实现了高可用的服务注册中心。
+
+断开peer1  http://localhost:1111/  挂掉
+
+ 
+ 
+
+
+http://localhost:1112/  继续
+
+ 
+
+
+
+
+
+
+
+5.4	深入理解(集群中节点同步)
+
+
+虽然上面我们以双节点作为例子，但是实际上因负载等原因，我们往往可能需要在生产环境构建多于两个的Eureka Server节点。
+那么对于如何配置serviceUrl来让集群中的服务进行同步，需要我们更深入的理解节点间的同步机制来做出决策。
+
+Eureka Server的同步遵循着一个非常简单的原则：只要有一条边将节点连接，就可以进行信息传播与同步。什么意思呢？
+不妨我们通过下面的实验来看看会发生什么。
+
+
+5.4.1	双向（两两对等注册）
+
+假设我们有3个注册中心，我们将peer1、peer2、peer3各自都将serviceUrl指向另外两个节点。换言之，peer1、peer2、peer3是两两互相注册的。
+启动三个服务注册中心，并将compute-service的serviceUrl指向peer1并启动，可以获得如下图所示的集群效果。
+ 
+访问http://localhost:1112/，可以看到3个注册中心组成了集群，compute-service服务通过peer1同步给了与之互相注册的peer2和peer3。
+
+
+验证
+
+1修改配置
+
+  
+ 
+ 
+
+
+
+2重新打包
+
+3执行：
+ java -jar eureka-server-1.0.0.jar --spring.profiles.active=peer1
+java -jar eureka-server-1.0.0.jar --spring.profiles.active=peer2
+java -jar eureka-server-1.0.0.jar --spring.profiles.active=peer3
+
+ 
+
+
+
+
+4 server页面结果
+http://localhost:1111/
+
+ 
+
+
+http://localhost:1112/
+
+ 
+
+
+http://localhost:1113/
+
+ 
+
+
+5、服务验证
+
+Peer1 shutdown
+ 
+
+
+注册在Pee2、pee3的服务compute-service : 2222还在
+ 
+
+
+
+
+
+
+
+
+
+5.4.2	单向
+
+依然假设我们有3个注册中心，我们将peer1的serviceUrl指向peer2，peer2的指向peer3，peer3的指向peer1，此时peer1、peer2、peer3通过单向边形成环
+
+分别启动peer1、peer2、peer3，并访问信息页面，我们可以找到下面的规律，
+peer1成为了peer2的分片节点，peer2成为了peer3的分片节点，peer3则成为了peer1的分片节点，
+再将compute-service的serviceUrl指向peer1并启动。放别访问peer1、peer2、peer3的信息页面，可以发现compute-service均被peer2和peer3同步过去了，所以单向边也能进行服务的传播与同步。此时，我们断开peer2，可以看到peer3中的compute-service消失了。重新开启peer2并断开peer3，可以看到peer2依然能同步到compute-service。所以我们可以得出结论，Eureka Server的传播与同步是具备方向性的。
+ 
+通过上面的实验，我们可以得出下面的两点结论来指导我们搭建服务注册中心的高可用集群：
+两两注册的方式可以实现集群中节点完全对等的效果，实现最高可用性集群，任何一台注册中心故障都不会影响服务的注册与发现
+Eureka Server具备单方面有指向的服务传播与同步机制，在一些对服务发现有限制的情况下，可以利用这样的机制进行服务注册与发现的的单向控制
+
+验证
+
+执行：
+ java -jar eureka-server1-1.0.0.jar --spring.profiles.active=peer1
+java -jar eureka-server1-1.0.0.jar --spring.profiles.active=peer2
+java -jar eureka-server1-1.0.0.jar --spring.profiles.active=peer3
+
+
+shutdown peer1
+
+
+peer2
+ 
+
+
+
+
+
+
+5.5	验证实例
+本文完整示例可参考
+http://git.oschina.net/didispace/SpringCloud-Learning/tree/master/Chapter1-1-6
+
+
+
+
+
+5.6	落地考虑&实现
+1、无论当边还是双向，理论上这样的落地没问题，只不过是否有其他问题，比如status缓存原因造成不刷新？
+2、注册与发现集群的配置很多，是否统一存入git  or svn 管理？
+3、集群间同步性能情况如何
+4、要兼容其他注册框架可装可卸，比如zk
+5、实现动态可配置界面管理，把git当作存储介质
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+6	Spring Cloud构建微服务架构（二）服务消费者
+在上一篇《Spring Cloud构建微服务架构（一）服务注册与发现》中，我们已经成功创建了“服务注册中心”，实现并注册了一个“服务提供者：COMPUTE-SERVICE”。那么我们要如何去消费服务提供者的接口内容呢？
+
+6.1	Ribbon
+Ribbon是一个基于HTTP和TCP客户端的负载均衡器。Feign中也使用Ribbon，后续会介绍Feign的使用。
+Ribbon可以在通过客户端中配置的ribbonServerList服务端列表去轮询访问以达到均衡负载的作用。
+当Ribbon与Eureka联合使用时，ribbonServerList会被DiscoveryEnabledNIWSServerList重写，扩展成从Eureka注册中心中获取服务端列表。同时它也会用NIWSDiscoveryPing来取代IPing，它将职责委托给Eureka来确定服务端是否已经启动。
+下面我们通过实例看看如何使用Ribbon来调用服务，并实现客户端的均衡负载。
+准备工作
+启动Chapter-9-1-1中的服务注册中心：eureka-server
+启动Chapter-9-1-1中的服务提供方：compute-service
+修改compute-service中的server-port为2223，再启动一个服务提供方：compute-service
+此时访问：http://localhost:1111/
+ \
+
+
+可以看到COMPUTE-SERVICE服务有两个单元正在运行：
+192.168.21.101:compute-service:2222
+192.168.21.101:compute-service:2223
+
+
+使用Ribbon实现客户端负载均衡的消费者
+构建一个基本Spring Boot项目，并在pom.xml中加入如下内容：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39	<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.5.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-ribbon</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-eureka</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+	    <groupId>org.springframework.cloud</groupId>
+	    <artifactId>spring-cloud-dependencies</artifactId>
+	    <version>Brixton.RELEASE</version>
+	    <type>pom</type>
+	    <scope>import</scope>
+	</dependency>
+    </dependencies>
+</dependencyManagement>
+
+6.1.1	RibbonApplication
+在应用主类中，通过@EnableDiscoveryClient注解来添加发现服务能力。创建RestTemplate实例，并通过@LoadBalanced注解开启均衡负载能力。
+
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class RibbonApplication {
+	@Bean
+	@LoadBalanced
+	RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
+	public static void main(String[] args) {
+		SpringApplication.run(RibbonApplication.class, args);
+	}
+}
+
+
+
+
+
+6.1.2	ConsumerController
+
+创建ConsumerController来消费COMPUTE-SERVICE的add服务。通过直接RestTemplate来调用服务，计算10 + 20的值。
+
+
+
+	
+@RestController
+public class ConsumerController {
+    @Autowired
+    RestTemplate restTemplate;
+    @RequestMapping(value = "/add", method = RequestMethod.GET)
+    public String add() {
+        return restTemplate.getForEntity("http://COMPUTE-SERVICE/add?a=10&b=20", String.class).getBody(); //消费端直接调用提供方服务名
+    }
+}
+
+
+ 
+
+	
+6.1.3	application.properties中配置eureka服务注册中心
+spring.application.name=ribbon-consumer
+server.port=3333
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/	
+
+
+
+启动该应用，并访问两次：http://localhost:3333/add
+然后，打开compute-service的两个服务提供方，分别输出了类似下面的日志内容：
+
+
+端口为2222服务提供端的日志：
+	2016-06-02 11:16:26.787  INFO 90014 --- [io-2222-exec-10] com.didispace.web.ComputeController      : /add, host:192.168.21.101, service_id:compute-service, result:30
+
+	
+端口为2223服务提供端的日志：
+	2016-06-02 11:19:41.241  INFO 90122 --- [nio-2223-exec-1] com.didispace.web.ComputeController      : /add, host:192.168.21.101, service_id:compute-service, result:30
+
+ 
+	
+ 
+	
+访问第二次http://localhost:3333/add走缓存？
+
+
+
+可以看到，之前启动的两个compute-service服务端分别被调用了一次。到这里，我们已经通过Ribbon在客户端已经实现了对服务调用的均衡负载。
+
+
+6.1.4	验证实例
+完整示例可参考：Chapter9-1-2/eureka-ribbon
+
+
+
+
+6.2	Feign
+Feign是一个声明式的Web Service客户端，它使得编写Web Serivce客户端变得更加简单。我们只需要使用Feign来创建一个接口并用注解来配置它既可完成。它具备可插拔的注解支持，包括Feign注解和JAX-RS注解。Feign也支持可插拔的编码器和解码器。Spring Cloud为Feign增加了对Spring MVC注解的支持，还整合了Ribbon和Eureka来提供均衡负载的HTTP客户端实现。
+下面，通过一个例子来展现Feign如何方便的声明对上述computer-service服务的定义和调用。
+
+创建一个Spring Boot工程，
+6.2.1	配置pom.xml
+，将上述的配置中的ribbon依赖替换成feign的依赖即可，具体如下：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39	<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.5.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-feign</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-eureka</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+	    <groupId>org.springframework.cloud</groupId>
+	    <artifactId>spring-cloud-dependencies</artifactId>
+	    <version>Brixton.RELEASE</version>
+	    <type>pom</type>
+	    <scope>import</scope>
+	</dependency>
+    </dependencies>
+</dependencyManagement>
+
+
+
+
+6.2.2	FeignApplication
+
+
+在应用主类中通过@EnableFeignClients注解开启Feign功能，具体如下：
+
+
+
+	@SpringBootApplication
+@EnableDiscoveryClient
+@EnableFeignClients
+public class FeignApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(FeignApplication.class, args);
+	}
+}
+ 
+	
+
+定义compute-service服务的接口，具体如下：
+
+6.2.3	ComputeClient
+	
+@FeignClient("compute-service")
+public interface ComputeClient {
+    @RequestMapping(method = RequestMethod.GET, value = "/add")
+    Integer add(@RequestParam(value = "a") Integer a, @RequestParam(value = "b") Integer b);
+}
+
+	
+使用@FeignClient("compute-service")注解来绑定该接口对应compute-service服务
+通过Spring MVC的注解来配置compute-service服务下的具体实现。
+
+6.2.4	ConsumerController
+
+在web层中调用上面定义的ComputeClient，具体如下：
+@RestController
+public class ConsumerController {
+    @Autowired
+    ComputeClient computeClient;
+    @RequestMapping(value = "/add", method = RequestMethod.GET)
+    public Integer add() {
+        return computeClient.add(10, 20);
+    }
+}
+	
+6.2.5	application.properties
+中不用变，指定eureka服务注册中心即可，如：
+
+spring.application.name=feign-consumer
+server.port=3333
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/
+	
+启动该应用，访问几次：http://localhost:3333/add
+再观察日志，可以得到之前使用Ribbon时一样的结果，对服务提供方实现了均衡负载。
+这一节我们通过Feign以接口和注解配置的方式，轻松实现了对compute-service服务的绑定，这样我们就可以在本地应用中像本地服务一下的调用它，并且做到了客户端均衡负载。
+
+ 
+6.2.6	验证实例
+完整示例可参考：Chapter9-1-2/eureka-feign
+
+
+
+7	Spring Cloud构建微服务架构（三）断路器（容错）
+7.1	背景
+在微服务架构中，我们将系统拆分成了一个个的服务单元，各单元间通过服务注册与订阅的方式互相依赖。由于每个单元都在不同的进程中运行，依赖通过远程调用的方式执行，这样就有可能因为网络原因或是依赖服务自身问题出现调用故障或延迟，而这些问题会直接导致调用方的对外服务也出现延迟，若此时调用方的请求不断增加，最后就会出现因等待出现故障的依赖方响应而形成任务积压，最终导致自身服务的瘫痪。
+举个例子，在一个电商网站中，我们可能会将系统拆分成，用户、订单、库存、积分、评论等一系列的服务单元。用户创建一个订单的时候，在调用订单服务创建订单的时候，会向库存服务来请求出货（判断是否有足够库存来出货）。此时若库存服务因网络原因无法被访问到，导致创建订单服务的线程进入等待库存申请服务的响应，在漫长的等待之后用户会因为请求库存失败而得到创建订单失败的结果。如果在高并发情况之下，因这些等待线程在等待库存服务的响应而未能释放，使得后续到来的创建订单请求被阻塞，最终导致订单服务也不可用。
+在微服务架构中，存在着那么多的服务单元，若一个单元出现故障，就会因依赖关系形成故障蔓延，最终导致整个系统的瘫痪，这样的架构相较传统架构就更加的不稳定。为了解决这样的问题，因此产生了断路器模式。
+
+7.2	什么是断路器
+断路器模式源于Martin Fowler的Circuit Breaker一文。“断路器”本身是一种开关装置，用于在电路上保护线路过载，当线路中有电器发生短路时，“断路器”能够及时的切断故障电路，防止发生过载、发热、甚至起火等严重后果。
+
+在分布式架构中，断路器模式的作用也是类似的，当某个服务单元发生故障（类似用电器发生短路）之后，通过断路器的故障监控（类似熔断保险丝），向调用方返回一个错误响应，而不是长时间的等待。这样就不会使得线程因调用故障服务被长时间占用不释放，避免了故障在分布式系统中的蔓延。
+
+7.3	Netflix Hystrix
+在Spring Cloud中使用了Hystrix 来实现断路器的功能。Hystrix是Netflix开源的微服务框架套件之一，该框架目标在于通过控制那些访问远程系统、服务和第三方库的节点，从而对延迟和故障提供更强大的容错能力。Hystrix具备拥有回退机制和断路器功能的线程和信号隔离，请求缓存和请求打包，以及监控和配置等功能。
+下面我们来看看如何使用Hystrix。
+
+
+
+7.3.1	准备工作
+在开始加入断路器之前，我们先拿之前构建两个微服务为基础进行下面的操作，主要使用下面几个工程：
+chapter9-1-1
+eureka-server工程：服务注册中心，端口1111
+compute-service工程：服务单元，端口2222
+chapter9-1-2
+eureka-ribbon：通过ribbon实现的服务单元，依赖compute-service的服务，端口3333
+eureka-feign：通过feign实现的服务单元，依赖compute-service的服务，端口3333
+若您还没有使用Spring Cloud的经验，可以先阅读《服务注册与发现》与《服务消费者》，对Spring Cloud构建的微服务有一个初步的认识。
+
+7.3.2	Ribbon中引入Hystrix
+
+依次启动eureka-server、compute-service、eureka-ribbon工程
+访问http://localhost:1111/可以看到注册中心的状态
+访问http://localhost:3333/add，调用eureka-ribbon的服务，该服务会去调用compute-service的服务，计算出10+20的值，页面显示30
+关闭compute-service服务，访问http://localhost:3333/add，我们获得了下面的报错信息
+Whitelabel Error Page
+This application has no explicit mapping for /error, so you are seeing this as a fallback.
+Sat Jun 25 21:16:59 CST 2016
+There was an unexpected error (type=Internal Server Error, status=500).
+I/O error on GET request for "http://COMPUTE-SERVICE/add?a=10&b=20": Connection refused: connect; nested exception is java.net.ConnectException: Connection refused: connect
+7.3.3	pom.xml中引入依赖hystrix依赖
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-hystrix</artifactId>
+</dependency>
+7.3.4	RibbonApplication
+在eureka-ribbon的主类RibbonApplication中使用@EnableCircuitBreaker注解开启断路器功能：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16	@SpringBootApplication
+@EnableDiscoveryClient
+@EnableCircuitBreaker
+public class RibbonApplication {
+	@Bean
+	@LoadBalanced
+	RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
+	public static void main(String[] args) {
+		SpringApplication.run(RibbonApplication.class, args);
+	}
+}
+
+
+7.3.5	ComputeService
+
+改造原来的服务消费方式，新增ComputeService类，在使用ribbon消费服务的函数上增加@HystrixCommand注解来指定回调方法。
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16	@Service
+public class ComputeService {
+    @Autowired
+    RestTemplate restTemplate;
+    @HystrixCommand(fallbackMethod = "addServiceFallback")
+    public String addService() {
+        return restTemplate.getForEntity("http://COMPUTE-SERVICE/add?a=10&b=20", String.class).getBody();
+    }
+    public String addServiceFallback() {
+        return "error";
+    }
+}
+
+7.3.6	ConsumerController
+提供rest接口的Controller改为调用ComputeService的addService
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12	@RestController
+public class ConsumerController {
+    @Autowired
+    private ComputeService computeService;
+    @RequestMapping(value = "/add", method = RequestMethod.GET)
+    public String add() {
+        return computeService.addService();
+    }
+}
+
+7.3.7	验证断路器的回调
+依次启动eureka-server、compute-service、eureka-ribbon工程
+访问http://localhost:1111/可以看到注册中心的状态
+访问http://localhost:3333/add，页面显示：30
+关闭compute-service服务后再访问http://localhost:3333/add，页面显示：error
+更多关于Hystrix的使用可参考How To Use
+
+
+7.4	Feign使用Hystrix
+
+注意这里说的是“使用”，没有错，我们不需要在Feigh工程中引入Hystix，Feign中已经依赖了Hystrix，我们可以在未做任何改造前，尝试下面你的操作：
+依次启动eureka-server、compute-service、eureka-feign工程
+访问http://localhost:1111/可以看到注册中心的状态
+访问http://localhost:3333/add，调用eureka-feign的服务，该服务会去调用compute-service的服务，计算出10+20的值，页面显示30
+关闭compute-service服务，访问http://localhost:3333/add，我们获得了下面的报错信息
+1
+2
+3
+4
+5
+6
+7	Whitelabel Error Page
+This application has no explicit mapping for /error, so you are seeing this as a fallback.
+Sat Jun 25 22:10:05 CST 2016
+There was an unexpected error (type=Internal Server Error, status=500).
+add timed-out and no fallback available.
+
+如果您够仔细，会发现与在ribbon中的报错是不同的，看到add timed-out and no fallback available这句，或许您已经猜到什么，看看我们的控制台，可以看到报错信息来自hystrix-core-1.5.2.jar，所以在这个工程中，我们要学习的就是如何使用Feign中集成的Hystrix。
+使用@FeignClient注解中的fallback属性指定回调类
+
+
+7.4.1	ComputeClient
+1
+2
+3
+4
+5
+6
+7	@FeignClient(value = "compute-service", fallback = ComputeClientHystrix.class)
+public interface ComputeClient {
+    @RequestMapping(method = RequestMethod.GET, value = "/add")
+     Integer add(@RequestParam(value = "a") Integer a, @RequestParam(value = "b") Integer b);
+}
+
+7.4.2	ComputeClientHystrix
+
+创建回调类ComputeClientHystrix，实现@FeignClient的接口，此时实现的方法就是对应@FeignClient接口中映射的fallback函数。
+1
+2
+3
+4
+5
+6
+7
+8
+9	@Component
+public class ComputeClientHystrix implements ComputeClient {
+    @Override
+    public Integer add(@RequestParam(value = "a") Integer a, @RequestParam(value = "b") Integer b) {
+        return -9999;
+    }
+}
+再用之前的方法验证一下，是否在compute-service服务不可用的情况下，页面返回了-9999。
+关于Feign的更多使用方法可参考：Feign
+
+7.5	验证实例
+
+完整示例：Chapter9-1-3
+
+
+
+
+8	Spring Cloud构建微服务架构（四）分布式配置原理
+8.1	前言
+
+在单体应用中，我们一般的做法是把Property和Code放在一起，没有什么问题。但是在分布式系统中，由于存在多个服务实例，需要分别管理到每个具体的服务工程中的配置，上线需要准备check list 并逐个检查每个上线的服务是否正确。在系统上线之后修改某个配置，需要重启服务。这样开发就相当麻烦。因此我们急需需要把分布式系统中的配置信息抽取出来统一管理，服务获取系统信息时有一个覆盖顺序:property–> Evn—->配置中心。这样修改环境变量或者修改配置中心的配置就能取到最新的配置信息。Spring cloud出现之后，避免了大家重复造轮子。
+
+
+8.2	什么是Spring Cloud Config 
+其官方文档中对自己的定义是如下，官网连接:Spring Cloud Config。
+Spring Cloud Config provides server and client-side support for externalized configuration in a distributed system.
+With the Config Server you have a central place to manage external properties for applications across all environments.
+简单来说，Spring Cloud Config就是我们通常意义上的配置中心 - 把应用原本放在本地文件的配置抽取出来放在中心服务器，从而能够提供更好的管理、发布能力。
+
+另外，Spring Cloud Config提供基于以下3个维度的配置管理：
+•	应用
+这个比较好理解，每个配置都是属于某一个应用的
+•	环境
+每个配置都是区分环境的，如dev, test, prod等
+•	版本
+这个可能是一般的配置中心所缺乏的，就是对同一份配置的不同版本管理，比如:可以通过Git进行版本控制。
+Spring Cloud Config提供版本的支持，也就是说对于一个应用的不同部署实例，可以从服务端获取到不同版本的配置，这对于一些特殊场景如：灰度发布，A/B测试等提供了很好的支持。
+
+8.3	为什么会诞生Spring Cloud Config
+配置中心目前现状:不管是开源的(百度的disconf)，还是一些公司自己闭源投入使用的产品已经不少了，那为什么还会诞生Spring Cloud Config呢？
+在我看来，Spring Cloud Config在以下几方面还是有比较独特的优势，如下：
+•	基于应用、环境、版本三个维度管理
+这个在前面提过了，主要是有版本的支持
+•	配置存储支持Git
+这个就比较有特色了，后端基于Git存储，一方面程序员非常熟悉，另一方面在部署上会非常简单，而且借助于Git，天生就能非常好的支持版本
+当然，它还支持其它的存储如本地文件、SVN等
+•	和Spring无缝集成
+它无缝支持Spring里面Environment和PropertySource的接口
+所以对于已有的Spring应用程序的迁移成本非常低，在配置获取的接口上是完全一致的
+
+8.4	Spring Cloud Config Overview
+上述节点主要介绍了Spring cloud的相关理论，大家对Spring Cloud Config有了一个初步的认识，接下来例子让大家感受一下Spring cloud config的魅力。
+ 
+上图简要描述了一个普通Spring Cloud Config应用的场景。其中主要有以下几个组件：
+
+
+	Config Client
+	Client很好理解，就是使用了Spring Cloud Config的应用, Spring Cloud Config提供了基于Spring的客户端，应用只要在代码中引入Spring Cloud Config Client的jar包即可工作
+
+	Config Server
+	Config Server是需要独立部署的一个web应用，它负责把git上的配置返回给客户端
+	Remote Git Repository
+	远程Git仓库，一般而言，我们会把配置放在一个远程仓库，通过现成的git客户端来管理配置
+
+	Local Git Repostiory
+	Config Server的本地Git仓库
+	Config Server接到来自客户端的配置获取请求后，会先把远程仓库的配置clone到本地的临时目录，然后从临时目录读取配置并返回
+
+
+
+
+
+
+
+
+
+
+9	Spring Cloud构建微服务架构（四）分布式配置中心
+
+Spring Cloud Config为服务端和客户端提供了分布式系统的外部化配置支持。配置服务器为各应用的所有环境提供了一个中心化的外部配置。它实现了对服务端和客户端对Spring Environment和PropertySource抽象的映射，所以它除了适用于Spring构建的应用程序，也可以在任何其他语言运行的应用程序中使用。作为一个应用可以通过部署管道来进行测试或者投入生产，我们可以分别为这些环境创建配置，并且在需要迁移环境的时候获取对应环境的配置来运行。
+配置服务器默认采用git来存储配置信息，这样就有助于对环境配置进行版本管理，并且可以通过git客户端工具来方便的管理和访问配置内容。当然他也提供本地化文件系统的存储方式，下面从这两方面介绍如何使用分布式配置来存储微服务应用多环境的配置内容。
+
+
+
+
+9.1	构建Config Server
+通过Spring Cloud构建一个Config Server，非常简单，只需要三步：
+pom.xml中引入spring-cloud-config-server依赖，完整依赖配置如下：
+
+
+<parent>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-parent</artifactId>
+	<version>1.3.5.RELEASE</version>
+	<relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-test</artifactId>
+		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-config-server</artifactId>
+	</dependency>
+</dependencies>
+<dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-dependencies</artifactId>
+			<version>Brixton.RELEASE</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+
+9.1.1	Application
+
+创建Spring Boot的程序主类，并添加@EnableConfigServer注解，开启Config Server
+
+@EnableConfigServer
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+}
+
+	
+9.1.2	application.properties
+
+中配置服务信息以及git信息，例如：
+spring.application.name=config-server
+server.port=7001
+# git管理配置
+spring.cloud.config.server.git.uri=http://git.oschina.net/didispace/SpringBoot-Learning/
+spring.cloud.config.server.git.searchPaths=Chapter9-1-4/config-repo
+spring.cloud.config.server.git.username=username
+spring.cloud.config.server.git.password=password
+
+
+
+
+	
+•	spring.cloud.config.server.git.uri：配置git仓库位置
+•	spring.cloud.config.server.git.searchPaths：配置仓库路径下的相对搜索位置，可以配置多个
+•	spring.cloud.config.server.git.username：访问git仓库的用户名
+•	spring.cloud.config.server.git.password：访问git仓库的用户密码
+
+到这里，使用一个通过Spring Cloud Config实现，并使用git管理内容的配置中心已经完成了，启动该应用，成功后开始下面的内容。
+
+
+
+Spring Cloud Config也提供本地存储配置的方式。我们只需要设置属性spring.profiles.active=native，Config Server会默认从应用的src/main/resource目录下检索配置文件。也可以通过spring.cloud.config.server.native.searchLocations=file:F:/properties/属性来指定配置文件的位置。虽然Spring Cloud Config提供了这样的功能，但是为了支持更好的管理内容和版本控制的功能，还是推荐使用git的方式。
+
+
+9.2	服务端验证
+
+为了验证上面完成的配置服务器，在http://git.oschina.net/didispace/SpringBoot-Learning/Chapter9-1-4/ 下创建了一个
+
+9.2.1	config-repo目录
+
+作为配置仓库，并根据不同环境新建了下面四个配置文件：
+•	didispace.properties
+•	didispace-dev.properties
+•	didispace-test.properties
+•	didispace-prod.properties
+
+其中设置了一个from属性，为每个配置文件分别设置了不同的值，如：
+•	from=git-default-1.0
+•	from=git-dev-1.0
+•	from=git-test-1.0
+•	from=git-prod-1.0
+
+为了测试版本控制，在master中，我们都加入1.0的后缀，同时创建一个config-label-test分支，并将各配置文件中的值用2.0作为后缀。
+完成了这些准备工作之后，我们就可以通过浏览器或POSTMAN等工具直接来访问到我们的配置内容了。
+
+URL与配置文件的映射关系如下：
+•	/{application}/{profile}[/{label}]
+•	/{application}-{profile}.yml
+•	/{label}/{application}-{profile}.yml
+•	/{application}-{profile}.properties
+•	/{label}/{application}-{profile}.properties
+
+上面的url会映射{application}-{profile}.properties对应的配置文件，{label}对应git上不同的分支，默认为master。
+
+
+我们可以尝试构造不同的url来访问不同的配置内容，比如：要访问config-label-test分支，didispace应用的prod环境，可以通过这个url：http://localhost:7001/didispace/prod/config-label-test
+{
+  "name": "didispace",
+  "profiles": [
+    "prod"
+  ],
+  "label": "config-label-test",
+  "version": "19de8a25575a7054a34230f74a22aa7f5575a9d1",
+  "propertySources": [
+    {
+      "name": "http://git.oschina.net/didispace/SpringBoot-Learning/Chapter9-1-4/config-repo/didispace-prod.properties",
+      "source": {
+        "from": "git-prod-2.0"
+      }
+    },
+    {
+      "name": "http://git.oschina.net/didispace/SpringBoot-Learning/Chapter9-1-4/config-repo/didispace.properties",
+      "source": {
+        "from": "git-default-2.0"
+      }
+    }
+  ]
+}
+
+	
+9.3	微服务端映射配置
+在完成并验证了配置服务中心之后，下面看看我们如何在微服务应用中获取配置信息。
+创建一个Spring Boot应用，在pom.xml中引入spring-cloud-starter-config依赖，完整依赖关系如下：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38	<parent>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-parent</artifactId>
+	<version>1.3.5.RELEASE</version>
+	<relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-test</artifactId>
+		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-config</artifactId>
+	</dependency>
+</dependencies>
+<dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-dependencies</artifactId>
+			<version>Brixton.RELEASE</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+	</dependencies>
+</dependencyManagement>
+
+
+9.3.1	Application
+
+创建最基本的Spring Boot启动主类
+1
+2
+3
+4
+5
+6
+7
+8	@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+}
+
+
+
+9.3.2	bootstrap.properties
+
+
+创建bootstrap.properties配置，来指定config server，例如：
+
+
+	spring.application.name=didispace
+spring.cloud.config.profile=dev
+spring.cloud.config.label=master
+spring.cloud.config.uri=http://localhost:7001/
+server.port=7002
+
+
+•	spring.application.name：对应前配置文件中的{application}部分
+•	spring.cloud.config.profile：对应前配置文件中的{profile}部分
+•	spring.cloud.config.label：对应前配置文件的git分支
+•	spring.cloud.config.uri：配置中心的地址
+
+
+这里需要格外注意：上面这些属性必须配置在bootstrap.properties中，config部分内容才能被正确加载。因为config的相关配置会先于application.properties，而bootstrap.properties的加载也是先于application.properties。
+9.3.3	TestController
+
+创建一个Rest Api来返回配置中心的from属性，具体如下：
+
+@RefreshScope
+@RestController
+class TestController {
+    @Value("${from}")
+    private String from;
+    @RequestMapping("/from")
+    public String from() {
+        return this.from;
+    }
+}
+
+	
+通过@Value("${from}")绑定配置服务中配置的from属性。
+启动该应用，并访问：http://localhost:7002/from ，我们就可以根据配置内容输出对应环境的from内容了。
+
+9.4	验证实例
+完整示例：Chapter9-1-4
+
+
+
+
+
+
+10	Spring Cloud构建微服务架构（四）分布式配置中心（续）
+
+本文接之前的《Spring Cloud构建微服务架构（四）分布式配置中心》，继续来说说Spring Cloud Config的使用。
+先来回顾一下，在前文中我们完成了什么：
+
+构建了config-server，连接到Git仓库
+在Git上创建了一个config-repo目录，用来存储配置信息
+构建了config-client，来获取Git中的配置信息
+
+在本文中，我们继续来看看Spring Cloud Config的一些其他能力。
+
+
+10.1	高可用问题
+10.1.1	传统作法
+通常在生产环境，Config Server与服务注册中心一样，我们也需要将其扩展为高可用的集群。在之前实现的config-server基础上来实现高可用非常简单，不需要我们为这些服务端做任何额外的配置，只需要遵守一个配置规则：将所有的Config Server都指向同一个Git仓库，这样所有的配置内容就通过统一的共享文件系统来维护，而客户端在指定Config Server位置时，只要配置Config Server外的均衡负载即可，就像如下图所示的结构：
+ 
+10.1.2	注册为服务
+
+虽然通过服务端负载均衡已经能够实现，但是作为架构内的配置管理，本身其实也是可以看作架构中的一个微服务。所以，另外一种方式更为简单的方法就是把config-server也注册为服务，这样所有客户端就能以服务的方式进行访问。通过这种方法，只需要启动多个指向同一Git仓库位置的config-server就能实现高可用了。
+配置过程也非常简单，具体如下：
+config-server配置
+在pom.xml的dependencies节点中引入如下依赖，相比之前的config-server就，加入了spring-cloud-starter-eureka，用来注册服务
+
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-config-server</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-eureka</artifactId>
+	</dependency>
+</dependencies>
+
+
+application.properties
+
+在application.properties中配置参数eureka.client.serviceUrl.defaultZone以指定服务注册中心的位置，详细内容如下：
+
+spring.application.name=config-server
+server.port=7001
+# 配置服务注册中心
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/
+# git仓库配置
+spring.cloud.config.server.git.uri=http://git.oschina.net/didispace/SpringCloud-Learning/
+spring.cloud.config.server.git.searchPaths=Chapter1-1-8/config-repo
+spring.cloud.config.server.git.username=username
+spring.cloud.config.server.git.password=password
+
+
+
+Application
+
+在应用主类中，新增@EnableDiscoveryClient注解，用来将config-server注册到上面配置的服务注册中心上去。
+@EnableDiscoveryClient
+@EnableConfigServer
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+}
+启动该应用，并访问http://localhost:1111/，可以在Eureka Server的信息面板中看到config-server已经被注册了。
+ 
+config-client配置
+同config-server一样，在pom.xml的dependencies节点中新增spring-cloud-starter-eureka依赖，用来注册服务：
+
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-config</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-eureka</artifactId>
+	</dependency>
+</dependencies>
+
+bootstrap.properties
+在bootstrap.properties中，按如下配置：
+
+spring.application.name=didispace
+server.port=7002
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/
+spring.cloud.config.discovery.enabled=true
+spring.cloud.config.discovery.serviceId=config-server
+spring.cloud.config.profile=dev
+
+
+其中，通过eureka.client.serviceUrl.defaultZone参数指定服务注册中心，用于服务的注册与发现，再将spring.cloud.config.discovery.enabled参数设置为true，开启通过服务来访问Config Server的功能，最后利用spring.cloud.config.discovery.serviceId参数来指定Config Server注册的服务名。这里的spring.application.name和spring.cloud.config.profile如之前通过URI的方式访问时候一样，用来定位Git中的资源。
+
+在应用主类中，增加@EnableDiscoveryClient注解，用来发现config-server服务，利用其来加载应用配置
+
+
+Application
+
+@EnableDiscoveryClient
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+}
+
+
+
+TestController
+
+沿用之前我们创建的Controller来加载Git中的配置信息
+
+@RefreshScope
+@RestController
+public class TestController {
+    @Value("${from}")
+    private String from;
+    @RequestMapping("/from")
+    public String from() {
+        return this.from;
+    }
+}
+
+完成了上述配置之后，我们启动该客户端应用。若启动成功，访问http://localhost:1111/，可以在Eureka Server的信息面板中看到该应用已经被注册成功了。
+ 
+访问客户端应用提供的服务：http://localhost:7002/from，此时，我们会返回在Git仓库中didispace-dev.properties文件配置的from属性内容：”git-dev-1.0”。
+
+
+
+10.2	配置刷新
+有时候，我们需要对配置内容做一些实时更新的场景，那么Spring Cloud Config是否可以实现呢？答案显然是可以的。下面，我们看看如何进行改造来实现配置内容的实时更新。
+
+在改造程序之前，我们先将config-server和config-client都启动起来，并访问客户端提供的REST API  http://localhost:7002/from来获取配置信息，可以获得返回内容为：git-dev-1.0。接着，我们可以尝试使用Git工具修改当前配置的内容，比如，将config-repo/didispace-dev.properties中的from的值从from=git-dev-1.0修改为from=git-dev-2.0，再访问http://localhost:7002/from，可以看到其返回内容还是git-dev-1.0。
+
+下面，我们将在config-client端增加一些内容和操作以实现配置的刷新：
+在config-clinet的pom.xml中新增spring-boot-starter-actuator监控模块，其中包含了/refresh刷新API。
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+1、重新启动config-clinet，访问一次http://localhost:7002/from，可以看到当前的配置值
+2、修改Git仓库config-repo/didispace-dev.properties文件中from的值
+3、再次访问一次http://localhost:7002/from，可以看到配置值没有改变
+4、通过POST请求发送到http://localhost:7002/refresh，我们可以看到返回内容如下，代表from参数的配置内容被更新了
+[
+  "from"
+]
+5、再次访问一次http://localhost:7002/from，可以看到配置值已经是更新后的值了
+通过上面的介绍，大家不难想到，该功能还可以同Git仓库的Web Hook功能进行关联，当有Git提交变化时，就给对应的配置主机发送/refresh请求来实现配置信息的实时更新。但是，当我们的系统发展壮大之后，维护这样的刷新清单也将成为一个非常大的负担，而且很容易犯错，那么有什么办法可以解决这个复杂度呢？后续我们将继续介绍如何通过Spring Cloud Bus来实现以消息总线的方式进行通知配置信息的变化，完成集群上的自动化更新。
+
+10.3	验证实例
+本文完整示例：
+开源中国：http://git.oschina.net/didispace/SpringCloud-Learning/tree/master/Chapter1-1-8
+GitHub：https://github.com/dyc87112/SpringCloud-Learning/tree/master/Chapter1-1-8
+
+
+
+
+11	Spring Cloud构建微服务架构（五）服务网关
+
+通过之前几篇Spring Cloud中几个核心组件的介绍，我们已经可以构建一个简略的（不够完善）微服务架构了。比如下图所示：
+ 
+
+11.1	场景
+
+我们使用Spring Cloud Netflix中的Eureka实现了服务注册中心以及服务注册与发现；而服务间通过Ribbon或Feign实现服务的消费以及均衡负载；
+通过Spring Cloud Config实现了应用多环境的外部化配置以及版本管理。为了使得服务集群更为健壮，使用Hystrix的融断机制来避免在微服务架构中个别服务出现异常时引起的故障蔓延。
+
+在该架构中，我们的服务集群包含：内部服务Service A和Service B，他们都会注册与订阅服务至Eureka Server，而Open Service是一个对外的服务，通过均衡负载公开至服务调用方。
+本文我们把焦点聚集在对外服务这块，这样的实现是否合理，或者是否有更好的实现方式呢？
+
+先来说说这样架构需要做的一些事儿以及存在的不足：
+首先，破坏了服务无状态特点。为了保证对外服务的安全性，我们需要实现对服务访问的权限控制，而开放服务的权限控制机制将会贯穿并污染整个开放服务的业务逻辑，这会带来的最直接问题是，破坏了服务集群中REST API无状态的特点。从具体开发和测试的角度来说，在工作中除了要考虑实际的业务逻辑之外，还需要额外可续对接口访问的控制处理。
+其次，无法直接复用既有接口。当我们需要对一个即有的集群内访问接口，实现外部服务访问时，我们不得不通过在原有接口上增加校验逻辑，或增加一个代理调用来实现权限控制，无法直接复用原有的接口。
+面对类似上面的问题，我们要如何解决呢？下面进入本文的正题：服务网关！
+
+为了解决上面这些问题，我们需要将权限控制这样的东西从我们的服务单元中抽离出去，而最适合这些逻辑的地方就是处于对外访问最前端的地方，我们需要一个更强大一些的均衡负载器，它就是本文将来介绍的：服务网关。
+服务网关是微服务架构中一个不可或缺的部分。通过服务网关统一向外系统提供REST API的过程中，除了具备服务路由、均衡负载功能之外，它还具备了权限控制等功能。Spring Cloud Netflix中的Zuul就担任了这样的一个角色，为微服务架构提供了前门保护的作用，同时将权限控制这些较重的非业务逻辑内容迁移到服务路由层面，使得服务集群主体能够具备更高的可复用性和可测试性。
+下面我们通过实例例子来使用一下Zuul来作为服务的路有功能。
+
+
+
+11.2	准备工作
+在使用Zuul之前，我们先构建一个服务注册中心、以及两个简单的服务，比如：我构建了一个service-A，一个service-B。然后启动eureka-server和这两个服务。通过访问eureka-server，我们可以看到service-A和service-B已经注册到了服务中心。
+
+
+ 
+
+
+
+如果您还不熟悉如何构建服务中心和注册服务，请先阅读Spring Cloud构建微服务架构（一）服务注册与发现。
+如果您不想自己动手准备，可以从这里获取示例代码：http://git.oschina.net/didispace/SpringBoot-Learning
+
+
+
+11.3	开始使用Zuul
+引入依赖spring-cloud-starter-zuul、spring-cloud-starter-eureka，如果不是通过指定serviceId的方式，eureka依赖不需要，但是为了对服务集群细节的透明性，还是用serviceId来避免直接引用url的方式吧。
+1
+2
+3
+4
+5
+6
+7
+8
+9	<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zuul</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-eureka</artifactId>
+</dependency>
+
+11.3.1	Application
+
+应用主类使用@EnableZuulProxy注解开启Zuul
+
+
+@EnableZuulProxy
+@SpringCloudApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+}
+
+
+这里用了@SpringCloudApplication注解，之前没有提过，通过源码我们看到，它整合了@SpringBootApplication、@EnableDiscoveryClient、@EnableCircuitBreaker，主要目的还是简化配置。这几个注解的具体作用这里就不做详细介绍了，之前的文章已经都介绍过。
+
+11.3.2	application.properties
+application.properties中配置Zuul应用的基础信息，如：应用名、服务端口等。
+ 
+ 	spring.application.name=api-gateway
+server.port=5555
+
+
+
+11.4	Zuul配置
+完成上面的工作后，Zuul已经可以运行了，但是如何让它为我们的微服务集群服务，还需要我们另行配置，下面详细的介绍一些常用配置内容。
+
+11.4.1	服务路由
+通过服务路由的功能，我们在对外提供服务的时候，只需要通过暴露Zuul中配置的调用地址就可以让调用方统一的来访问我们的服务，而不需要了解具体提供服务的主机信息了。
+在Zuul中提供了url,serviceId两种映射方式
+
+url映射
+
+
+通过url直接映射，我们可以如下配置：
+# routes to url
+zuul.routes.api-a-url.path=/api-a-url/**
+zuul.routes.api-a-url.url=http://localhost:2222/
+
+
+该配置定义了，所有到Zuul的中规则为：
+/api-a-url/**的访问都映射到http://localhost:2222/上
+
+也就是说当我们访问http://localhost:5555/api-a-url/add?a=1&b=2的时候，Zuul会将该请求路由到：http://localhost:2222/add?a=1&b=2上
+
+其中，配置属性zuul.routes.api-a-url.path中的api-a-url部分为路由的名字，可以任意定义，但是一组映射关系的path和url要相同，下面讲serviceId时候也是如此。
+
+
+serviceId映射
+
+通过url映射的方式对于Zuul来说，并不是特别友好，Zuul需要知道我们所有为服务的地址，才能完成所有的映射配置。而实际上，我们在实现微服务架构时，服务名与服务实例地址的关系在eureka server中已经存在了，所以只需要将Zuul注册到eureka server上去发现其他服务，我们就可以实现对serviceId的映射。例如，我们可以如下配置：
+
+
+
+	zuul.routes.api-a.path=/api-a/**
+zuul.routes.api-a.serviceId=service-A
+zuul.routes.api-b.path=/api-b/**
+zuul.routes.api-b.serviceId=service-B
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/
+
+
+
+针对我们在准备工作中实现的两个微服务service-A和service-B，定义了两个路由api-a和api-b来分别映射。
+另外为了让Zuul能发现service-A和service-B，也加入了eureka的配置。
+接下来，我们将eureka-server、service-A、service-B以及这里用Zuul实现的服务网关启动起来，在eureka-server的控制页面中，我们可以看到分别注册了service-A、service-B以及api-gateway
+ 
+
+
+尝试通过服务网关来访问service-A和service-B，
+根据配置的映射关系，分别访问下面的url
+
+http://localhost:5555/api-a/add?a=1&b=2：通过serviceId映射访问service-A中的add服务
+http://localhost:5555/api-b/add?a=1&b=2：通过serviceId映射访问service-B中的add服务
+http://localhost:5555/api-a-url/add?a=1&b=2：通过url映射访问service-A中的add服务
+
+推荐使用serviceId的映射方式，除了对Zuul维护上更加友好之外，serviceId映射方式还支持了断路器，对于服务故障的情况下，可以有效的防止故障蔓延到服务网关上而影响整个系统的对外服务
+	
+
+11.4.2	服务过滤
+
+在完成了服务路由之后，我们对外开放服务还需要一些安全措施来保护客户端只能访问它应该访问到的资源。所以我们需要利用Zuul的过滤器来实现我们对外服务的安全控制。
+在服务网关中定义过滤器只需要继承ZuulFilter抽象类实现其定义的四个抽象函数就可对请求进行拦截与过滤。
+比如下面的例子，定义了一个Zuul过滤器，实现了在请求被路由之前检查请求中是否有accessToken参数，若有就进行路由，若没有就拒绝访问，返回401 Unauthorized错误。
+
+
+
+
+
+public class AccessFilter extends ZuulFilter  {
+    private static Logger log = LoggerFactory.getLogger(AccessFilter.class);
+    @Override
+    public String filterType() {
+        return "pre";
+    }
+    @Override
+    public int filterOrder() {
+        return 0;
+    }
+    @Override
+    public boolean shouldFilter() {
+        return true;
+    }
+    @Override
+    public Object run() {
+        RequestContext ctx = RequestContext.getCurrentContext();
+        HttpServletRequest request = ctx.getRequest();
+        log.info(String.format("%s request to %s", request.getMethod(), request.getRequestURL().toString()));
+        Object accessToken = request.getParameter("accessToken");
+        if(accessToken == null) {
+            log.warn("access token is empty");
+            ctx.setSendZuulResponse(false);
+            ctx.setResponseStatusCode(401);
+            return null;
+        }
+        log.info("access token ok");
+        return null;
+    }
+}
+
+	
+自定义过滤器的实现，需要继承ZuulFilter，需要重写实现下面四个方法：
+filterType：返回一个字符串代表过滤器的类型，在zuul中定义了四种不同生命周期的过滤器类型，具体如下：
+pre：可以在请求被路由之前调用
+routing：在路由请求时候被调用
+post：在routing和error过滤器之后被调用
+error：处理请求时发生错误时被调用
+filterOrder：通过int值来定义过滤器的执行顺序
+shouldFilter：返回一个boolean类型来判断该过滤器是否要执行，所以通过此函数可实现过滤器的开关。在上例中，我们直接返回true，所以该过滤器总是生效。
+run：过滤器的具体逻辑。需要注意，这里我们通过ctx.setSendZuulResponse(false)令zuul过滤该请求，不对其进行路由，然后通过ctx.setResponseStatusCode(401)设置了其返回的错误码，当然我们也可以进一步优化我们的返回，比如，通过ctx.setResponseBody(body)对返回body内容进行编辑等。
+在实现了自定义过滤器之后，还需要实例化该过滤器才能生效，我们只需要在应用主类中增加如下内容：
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14	@EnableZuulProxy
+@SpringCloudApplication
+public class Application {
+	public static void main(String[] args) {
+		new SpringApplicationBuilder(Application.class).web(true).run(args);
+	}
+	@Bean
+	public AccessFilter accessFilter() {
+		return new AccessFilter();
+	}
+}
+
+启动该服务网关后，访问：
+http://localhost:5555/api-a/add?a=1&b=2：返回401错误
+http://localhost:5555/api-a/add?a=1&b=2&accessToken=token：正确路由到server-A，并返回计算内容
+
+对于其他一些过滤类型，这里就不一一展开了，根据之前对filterType生命周期介绍，可以参考下图去理解，并根据自己的需要在不同的生命周期中去实现不同类型的过滤器。
+
+ 
+
+
+最后，总结一下为什么服务网关是微服务架构的重要部分，是我们必须要去做的原因：
+不仅仅实现了路由功能来屏蔽诸多服务细节，更实现了服务级别、均衡负载的路由。
+实现了接口权限校验与微服务业务逻辑的解耦。通过服务网关中的过滤器，在各生命周期中去校验请求的内容，将原本在对外服务层做的校验前移，保证了微服务的无状态性，同时降低了微服务的测试难度，让服务本身更集中关注业务逻辑的处理。
+实现了断路器，不会因为具体微服务的故障而导致服务网关的阻塞，依然可以对外服务。
+
+
+11.5	验证实例
+本文完整示例可参考：Chapter9-1-5
+
+
+
+
+
+12	Spring Cloud构建微服务架构（六）集成RabbitMQ
+
+很久没有写Spring Boot的内容了，正好最近在写Spring Cloud Bus的内容，因为内容会有一些相关性，所以先补一篇关于AMQP的整合
+
+12.1	Message Broker与AMQP简介
+Message Broker是一种消息验证、传输、路由的架构模式，其设计目标主要应用于下面这些场景：
+	消息路由到一个或多个目的地
+	消息转化为其他的表现方式
+	执行消息的聚集、消息的分解，并将结果发送到他们的目的地，然后重新组合相应返回给消息用户
+	调用Web服务来检索数据
+	响应事件或错误
+	使用发布-订阅模式来提供内容或基于主题的消息路由
+
+AMQP是Advanced Message Queuing Protocol的简称，它是一个面向消息中间件的开放式标准应用层协议。AMQP定义了这些特性：
+	消息方向
+	消息队列
+	消息路由（包括：点到点和发布-订阅模式）
+	可靠性
+	安全性
+
+
+
+12.2	RabbitMQ
+本文要介绍的RabbitMQ就是以AMQP协议实现的一种中间件产品，它可以支持多种操作系统，多种编程语言，几乎可以覆盖所有主流的企业级技术平台
+
+12.3	安装
+在RabbitMQ官网的下载页面https://www.rabbitmq.com/download.html
+中，我们可以获取到针对各种不同操作系统的安装包和说明文档。这里，我们将对几个常用的平台一一说明。
+下面我们采用的Erlang和RabbitMQ Server版本说明：
+Erlang/OTP 19.1
+RabbitMQ Server 3.6.5
+
+Windows安装
+安装Erland，通过官方下载页面http://www.erlang.org/downloads获取exe安装包，直接打开并完成安装。
+安装RabbitMQ，通过官方下载页面https://www.rabbitmq.com/download.html获取exe安装包。
+
+环境配置
+1：安装RabbitMQ需要先安装Erlang语言开发包。下载地址 http://www.erlang.org/download.html 在win7下安装Erlang最好默认安装。
+      设置环境变量ERLANG_HOME= C:\Program Files\erlx.x.x 
+      添加到PATH  %ERLANG_HOME%\bin;
+ 
+2：安装RabbitMQ 下载地址 http://www.rabbitmq.com/download.html  安装教程：http://www.rabbitmq.com/install-windows.html
+      设置环境变量RABBITMQ_SERVER=C:\Program Files\rabbitmq_server-x.x.x。
+      添加到PATH %RABBITMQ_SERVER%\sbin;
+
+
+
+
+下载完成后，直接运行安装程序。
+RabbitMQ Server安装完成之后，会自动的注册为服务，并以默认配置启动起来。
+ 
+
+
+Mac OS X安装
+在Mac OS X中使用brew工具，可以很容易的安装RabbitMQ的服务端，只需要按如下命令操作即可：
+brew更新到最新版本，执行：brew update
+安装Erlang，执行：brew install erlang
+安装RabbitMQ Server，执行：brew install rabbitmq
+通过上面的命令，RabbitMQ Server的命令会被安装到/usr/local/sbin，并不会自动加到用户的环境变量中去，所以我们需要在.bash_profile或.profile文件中增加下面内容：
+1	PATH=$PATH:/usr/local/sbin
+这样，我们就可以通过rabbitmq-server命令来启动RabbitMQ的服务端了。
+
+
+Ubuntu安装
+在Ubuntu中，我们可以使用APT仓库来进行安装
+安装Erlang，执行：apt-get install erlang
+执行下面的命令，新增APT仓库到/etc/apt/sources.list.d
+
+echo 'deb http://www.rabbitmq.com/debian/ testing main' |
+        sudo tee /etc/apt/sources.list.d/rabbitmq.list
+
+更新APT仓库的package list，执行sudo apt-get update命令
+安装Rabbit Server，执行sudo apt-get install rabbitmq-server命令
+
+
+
+12.4	Rabbit管理
+我们可以直接通过配置文件的访问进行管理，也可以通过Web的访问进行管理。下面我们将介绍如何通过Web进行管理。
+执行rabbitmq-plugins enable rabbitmq_management命令，开启Web管理插件，这样我们就可以通过浏览器来进行管理了。
+
+> rabbitmq-plugins enable rabbitmq_management
+The following plugins have been enabled:
+  mochiweb
+  webmachine
+  rabbitmq_web_dispatch
+  amqp_client
+  rabbitmq_management_agent
+  rabbitmq_management
+Applying plugin configuration to rabbit@PC-201602152056... started 6 plugins.
+
+	
+打开浏览器并访问：http://localhost:15672/，并使用默认用户guest登录，密码也为guest。我们可以看到如下图的管理页面：
+ 
+从图中，我们可以看到之前章节中提到的一些基本概念，比如：Connections、Channels、Exchanges、Queue等。第一次使用的读者，可以都点开看看都有些什么内容，熟悉一下RabbitMQ Server的服务端。
+点击Admin标签，在这里可以进行用户的管理。
+
+
+更详细管理与配置请查阅《windows下 安装 rabbitMQ 及操作常用命令》
+
+
+
+12.5	Rabbit与Spring Boot集成
+下面，我们通过在Spring Boot应用中整合RabbitMQ，并实现一个简单的发送、接收消息的例子来对RabbitMQ有一个直观的感受和理解。
+
+在Spring Boot中整合RabbitMQ是一件非常容易的事，因为之前我们已经介绍过Starter POMs，其中的AMQP模块就可以很好的支持RabbitMQ，下面我们就来详细说说整合过程：
+
+新建一个Spring Boot工程，命名为：“rabbitmq-hello”
+在pom.xml中引入如下依赖内容，其中spring-boot-starter-amqp用于支持RabbitMQ
+
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.7.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+在application.properties中配置关于RabbitMQ的连接和用户信息，用户可以回到上面的安装内容，在管理页面中创建用户
+
+
+
+spring.application.name=rabbitmq-hello
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=spring
+spring.rabbitmq.password=123456
+
+
+创建消息生产者Sender。通过注入AmqpTemplate接口的实例来实现消息的发送，AmqpTemplate接口定义了一套针对AMQP协议的基础操作。在Spring Boot中会根据配置来注入其具体实现。在该生产者，我们会产生一个字符串，并发送到名为hello的队列中。
+
+@Component
+public class Sender {
+    @Autowired
+    private AmqpTemplate rabbitTemplate;
+    public void send() {
+        String context = "hello " + new Date();
+        System.out.println("Sender : " + context);
+        this.rabbitTemplate.convertAndSend("hello", context);
+    }
+}
+
+
+创建消息消费者Receiver。通过@RabbitListener注解定义该类对hello队列的监听，并用@RabbitHandler注解来指定对消息的处理方法。所以，该消费者实现了对hello队列的消费，消费操作为输出消息的字符串内容。
+
+@Component
+@RabbitListener(queues = "hello")
+public class Receiver {
+    @RabbitHandler
+    public void process(String hello) {
+        System.out.println("Receiver : " + hello);
+    }
+}
+
+创建RabbitMQ的配置类RabbitConfig，用来配置队列、交换器、路由等高级信息。这里我们以入门为主，先以最小化的配置来定义，以完成一个基本的生产和消费过程。
+
+@Configuration
+public class RabbitConfig {
+    @Bean
+    public Queue helloQueue() {
+        return new Queue("hello");
+    }
+}
+
+
+创建应用主类：
+@SpringBootApplication
+public class HelloApplication {
+public static void main(String[] args) {
+SpringApplication.run(HelloApplication.class, args);
+}
+}
+
+
+创建单元测试类，用来调用消息生产：
+
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = HelloApplication.class)
+public class HelloApplicationTests {
+    @Autowired
+    private Sender sender;
+    @Test
+    public void hello() throws Exception {
+        sender.send();
+    }
+}
+
+完成程序编写之后，下面开始尝试运行。首先确保RabbitMQ Server已经开始，然后进行下面的操作：
+
+启动应用主类，从控制台中，我们看到如下内容，程序创建了一个访问127.0.0.1:5672中springcloud的连接
+
+o.s.a.r.c.CachingConnectionFactory       : Created new connection: SimpleConnection@29836d32 [delegate=amqp://springcloud@127.0.0.1:5672/]
+
+同时，我们通过RabbitMQ的控制面板，可以看到Connection和Channels中包含当前连接的条目。
+
+运行单元测试类，我们可以看到控制台中输出下面的内容，消息被发送到了RabbitMQ Server的hello队列中。
+
+
+Sender : hello Sun Sep 25 11:06:11 CST 2016
+切换到应用主类的控制台，我们可以看到类似如下输出，消费者对hello队列的监听程序执行了，并输出了接受到的消息信息。
+
+Receiver : hello Sun Sep 25 11:06:11 CST 2016
+
+通过上面的示例，我们在Spring Boot应用中引入spring-boot-starter-amqp模块，进行简单配置就完成了对RabbitMQ的消息生产和消费的开发内容。然而在实际应用中，我们还有很多内容没有演示，这里不做更多的讲解，读者可以自行查阅RabbitMQ的官方教程，有更全面的了解。
+
+12.6	验证实例
+完整示例：Chapter5-2-1
+开源中国：http://git.oschina.net/didispace/SpringBoot-Learning/tree/master/Chapter5-2-1
+GitHub：https://github.com/dyc87112/SpringBoot-Learning/tree/master/Chapter5-2-1
+
+
+
+
+
+
+
+
+13	Spring Cloud构建微服务架构（六）消息总线（Rabbit）
+
+
+先回顾一下，在之前的Spring Cloud Config的介绍中，我们还留了一个悬念：如何实现对配置信息的实时更新。虽然，我们已经能够通过/refresh接口和Git仓库的Web Hook来实现Git仓库中的内容修改触发应用程序的属性更新。但是，若所有触发操作均需要我们手工去维护Web Hook中的应用位置的话，这随着系统的不断扩张，会变的越来越难以维护，而消息代理中间件是解决该问题最为合适的方案。是否还记得我们在介绍消息代理中的特点时有提到过这样一个功能：消息代理中间件可以将消息路由到一个或多个目的地。利用这个功能，我们就能完美的解决该问题，下面我们来说说Spring Cloud Bus中的具体实现方案。
+在《Spring Boot中使用RabbitMQ》一文中，我们已经介绍了关于消息代理、AMQP协议以及RabbitMQ的基础知识和使用方法。下面我们开始具体介绍Spring Cloud Bus的配置，并以一个Spring Cloud Bus与Spring Cloud Config结合的例子来实现配置内容的实时更新。
+
+
+
+
+13.1	RabbitMQ实现
+
+下面我们来具体动手尝试整个配置过程：
+
+1、准备工作：这里我们不做新的应用，但需要用到上一章中，我们已经实现的关于Spring Cloud Config的几个工程，若读者对其还不了解，建议先阅读第4章的内容。
+
+2、config-repo：定义在Git仓库中的一个目录，其中存储了应用名为didispace的多环境配置文件，配置文件中有一个from参数。
+
+3、config-server-eureka：配置了Git仓库，并注册到了Eureka的服务端。
+
+4、config-client-eureka：通过Eureka发现Config Server的客户端，应用名为didispace，用来访问配置服务器以获取配置信息。该应用中提供了一个/from接口，它会获取config-repo/didispace-dev.properties中的from属性返回。
+
+5、扩展config-client-eureka应用
+修改pom.xml增加spring-cloud-starter-bus-amqp模块（注意spring-boot-starter-actuator模块也是必须的）
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+</dependency>
+
+
+
+6、在配置文件中增加关于RabbitMQ的连接和用户信息
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=springcloud
+spring.rabbitmq.password=123456
+
+
+7、启动config-server-eureka，再启动两个config-client-eureka（分别在不同的端口上，比如7002、7003），我们可以在config-client-eureka中的控制台中看到如下内容，在启动时候，客户端程序多了一个/bus/refresh请求。
+
+o.s.b.a.e.mvc.EndpointHandlerMapping     : Mapped "{[/bus/refresh],methods=[POST]}" onto public void org.springframework.cloud.bus.endpoint.RefreshBusEndpoint.refresh(java.lang.String)
+
+8、先访问两个config-client-eureka的/from请求，会返回当前config-repo/didispace-dev.properties中的from属性。
+
+
+9、接着，我们修改config-repo/didispace-dev.properties中的from属性值，并发送POST请求到其中的一个/bus/refresh。
+
+
+10、最后，我们再分别访问启动的两个config-client-eureka的/from请求，此时这两个请求都会返回最新的config-repo/didispace-dev.properties中的from属性。
+
+
+到这里，我们已经能够通过Spring Cloud Bus来实时更新总线上的属性配置了。
+
+
+13.2	原理分析
+我们通过使用Spring Cloud Bus与Spring Cloud Config的整合，并以RabbitMQ作为消息代理，实现了应用配置的动态更新。
+ 
+整个方案的架构如上图所示，其中包含了Git仓库、Config Server、以及微服务“Service A”的三个实例，这三个实例中都引入了Spring Cloud Bus，所以他们都连接到了RabbitMQ的消息总线上。
+当我们将系统启动起来之后，“Service A”的三个实例会请求Config Server以获取配置信息，Config Server根据应用配置的规则从Git仓库中获取配置信息并返回。
+此时，若我们需要修改“Service A”的属性。首先，通过Git管理工具去仓库中修改对应的属性值，但是这个修改并不会触发“Service A”实例的属性更新。我们向“Service A”的实例3发送POST请求，访问/bus/refresh接口。此时，“Service A”的实例3就会将刷新请求发送到消息总线中，该消息事件会被“Service A”的实例1和实例2从总线中获取到，并重新从Config Server中获取他们的配置信息，从而实现配置信息的动态更新。
+而从Git仓库中配置的修改到发起/bus/refresh的POST请求这一步可以通过Git仓库的Web Hook来自动触发。由于所有连接到消息总线上的应用都会接受到更新请求，所以在Web Hook中就不需要维护所有节点内容来进行更新，从而解决了通过Web Hook来逐个进行刷新的问题。
+
+
+13.3	指定刷新范围
+上面的例子中，我们通过向服务实例请求Spring Cloud Bus的/bus/refresh接口，从而触发总线上其他服务实例的/refresh。但是有些特殊场景下（比如：灰度发布），我们希望可以刷新微服务中某个具体实例的配置。
+Spring Cloud Bus对这种场景也有很好的支持：/bus/refresh接口还提供了destination参数，用来定位具体要刷新的应用程序。比如，我们可以请求/bus/refresh?destination=customers:9000，此时总线上的各应用实例会根据destination属性的值来判断是否为自己的实例名，若符合才进行配置刷新，若不符合就忽略该消息。
+destination参数除了可以定位具体的实例之外，还可以用来定位具体的服务。定位服务的原理是通过使用Spring的PathMatecher（路径匹配）来实现，比如：/bus/refresh?destination=customers:**，该请求会触发customers服务的所有实例进行刷新。
+
+13.4	架构优化
+既然Spring Cloud Bus的/bus/refresh接口提供了针对服务和实例进行配置更新的参数，那么我们的架构也相应的可以做出一些调整。在之前的架构中，服务的配置更新需要通过向具体服务中的某个实例发送请求，再触发对整个服务集群的配置更新。虽然能实现功能，但是这样的结果是，我们指定的应用实例就会不同于集群中的其他应用实例，这样会增加集群内部的复杂度，不利于将来的运维工作，比如：我们需要对服务实例进行迁移，那么我们不得不修改Web Hook中的配置等。所以我们要尽可能的让服务集群中的各个节点是对等的。
+因此，我们将之前的架构做了一些调整，如下图所示：
+ 
+我们主要做了这些改动：
+在Config Server中也引入Spring Cloud Bus，将配置服务端也加入到消息总线中来。
+/bus/refresh请求不在发送到具体服务实例上，而是发送给Config Server，并通过destination参数来指定需要更新配置的服务或实例。
+通过上面的改动，我们的服务实例就不需要再承担触发配置更新的职责。同时，对于Git的触发等配置都只需要针对Config Server即可，从而简化了集群上的一些维护工作。
+
+
+13.5	验证实例
+
+本文完整示例：
+开源中国：http://git.oschina.net/didispace/SpringCloud-Learning/tree/master/Chapter1-1-7
+GitHub：https://github.com/dyc87112/SpringCloud-Learning/tree/master/Chapter1-1-7
+
+
+
+
+
+
+14	Spring Cloud构建微服务架构（七）消息总线（Kafka）
+
+Spring Cloud Bus除了支持RabbitMQ的自动化配置之外，还支持现在被广泛应用的Kafka。在本文中，我们将搭建一个Kafka的本地环境，并通过它来尝试使用Spring Cloud Bus对Kafka的支持，实现消息总线的功能。由于本文会以之前Rabbit的实现作为基础来修改，所以先阅读《Spring Cloud构建微服务架构（七）消息总线》有助于理解本文。
+
+14.1	Kafka简介
+Kafka是一个由LinkedIn开发的分布式消息系统，它于2011年初开源，现在由著名的Apache基金会维护与开发。Kafka使用Scala实现，被用作LinkedIn的活动流和运营数据处理的管道，现在也被诸多互联网企业广泛地用作为数据流管道和消息系统。
+Kafka是基于消息发布/订阅模式实现的消息系统，其主要设计目标如下：
+消息持久化：以时间复杂度为O(1)的方式提供消息持久化能力，即使对TB级以上数据也能保证常数时间复杂度的访问性能。
+高吞吐：在廉价的商用机器上也能支持单机每秒100K条以上的吞吐量
+分布式：支持消息分区以及分布式消费，并保证分区内的消息顺序
+跨平台：支持不同技术平台的客户端（如：Java、PHP、Python等）
+实时性：支持实时数据处理和离线数据处理
+伸缩性：支持水平扩展
+
+Kafka中涉及的一些基本概念：
+Broker：Kafka集群包含一个或多个服务器，这些服务器被称为Broker。
+Topic：逻辑上同Rabbit的Queue队列相似，每条发布到Kafka集群的消息都必须有一个Topic。（物理上不同Topic的消息分开存储，逻辑上一个Topic的消息虽然保存于一个或多个Broker上，但用户只需指定消息的Topic即可生产或消费数据而不必关心数据存于何处）
+Partition：Partition是物理概念上的分区，为了提供系统吞吐率，在物理上每个Topic会分成一个或多个Partition，每个Partition对应一个文件夹（存储对应分区的消息内容和索引文件）。
+Producer：消息生产者，负责生产消息并发送到Kafka Broker。
+Consumer：消息消费者，向Kafka Broker读取消息并处理的客户端。
+Consumer Group：每个Consumer属于一个特定的组（可为每个Consumer指定属于一个组，若不指定则属于默认组），组可以用来实现一条消息被组内多个成员消费等功能。
+
+14.2	快速入门
+在对Kafka有了一些基本了解之后，下面我们来尝试构建一个Kafka服务端，并体验一下基于Kafka的消息生产与消费。
+14.3	环境安装
+首先，我们需要从官网上下载安装介质。下载地址为：http://kafka.apache.org/downloads.html。本例中采用的版本为：Kafka-0.10.0.1
+在解压Kafka的安装包之后，可以看到其目录结构如下：
+
+kafka
+  +-bin
+    +-windows
+  +-config
+  +-libs
+  +-logs
+  +-site-docs
+
+
+由于Kafka的设计中依赖了ZooKeeper，所以我们可以在bin和config目录中除了看到Kafka相关的内容之外，还有ZooKeeper相关的内容。其中bin目录存放了Kafka和ZooKeeper的命令行工具，bin根目录下是适用于Linux/Unix的shell，而bin/windows下的则是适用于windows下的bat。我们可以根据实际的系统来设置环境变量，以方便后续的使用和操作。而在config目录中，则是用来存放了关于Kafka与ZooKeeper的配置信息
+
+
+详情请查阅《Windows7上简单安装运行Apache Kafka教程》
+
+14.4	启动测试
+下面我们来尝试启动ZooKeeper和Kafka来进行消息的生产和消费。示例中所有的命令均已配置了Kafka的环境变量为例。
+
+
+1、启动ZooKeeper，执行命令：zookeeper-server-start config/zookeeper.properties，该命令需要指定zookeeper的配置文件位置才能正确启动，kafka的压缩包中包含了其默认配置，开发与测试环境不需要修改。
+
+[2016-09-28 08:05:34,849] INFO Reading configuration from: config\zookeeper.properties (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
+[2016-09-28 08:05:34,850] INFO autopurge.snapRetainCount set to 3 (org.apache.zookeeper.server.DatadirCleanupManager)
+[2016-09-28 08:05:34,851] INFO autopurge.purgeInterval set to 0 (org.apache.zookeeper.server.DatadirCleanupManager)
+[2016-09-28 08:05:34,851] INFO Purge task is not scheduled. (org.apache.zookeeper.server.DatadirCleanupManager)
+[2016-09-28 08:05:34,852] WARN Either no config or no quorum defined in config, running  in standalone mode (org.apache.zookeeper.server.quorum.QuorumPeerMain)
+[2016-09-28 08:05:34,868] INFO Reading configuration from: config\zookeeper.properties (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
+[2016-09-28 08:05:34,869] INFO Starting server (org.apache.zookeeper.server.ZooKeeperServerMain)
+...
+[2016-09-28 08:05:34,940] INFO binding to port 0.0.0.0/0.0.0.0:2181 (org.apache.zookeeper.server.NIOServerCnxnFactory)
+
+
+从控制台信息中，我们可以看到ZooKeeper从指定的config/zookeeper.properties配置文件中读取信息并绑定2181端口启动服务。有时候启动失败，可查看一下端口是否被占用，可以杀掉占用进程或通过修改config/zookeeper.properties配置文件中的clientPort内容以绑定其他端口号来启动ZooKeeper。
+
+2、启动Kafka，执行命令：kafka-server-start config/server.properties，该命令也需要指定Kafka配置文件的正确位置，如上命令中指向了解压目录包含的默认配置。若在测试时，使用外部集中环境的ZooKeeper的话，我们可以在该配置文件中通过zookeeper.connect参数来设置ZooKeeper的地址和端口，它默认会连接本地2181端口的ZooKeeper；如果需要设置多个ZooKeeper节点，可以为这个参数配置多个ZooKeeper地址，并用逗号分割。比如：zookeeper.connect=127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002
+
+3、创建Topic，执行命令：kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test，通过该命令，创建一个名为“test”的Topic，该Topic包含一个分区一个Replica。在创建完成后，可以使用kafka-topics --list --zookeeper localhost:2181命令来查看当前的Topic。
+另外，如果我们不使用kafka-topics命令来手工创建，直接进行下面的内容进行消息创建时也会自动创建Topics来使用。
+
+4、创建消息生产者，执行命令：kafka-console-producer --broker-list localhost:9092 --topic test。kafka-console-producer命令可以启动Kafka基于命令行的消息生产客户端，启动后可以直接在控制台中输入消息来发送，控制台中的每一行数据都会被视为一条消息来发送。我们可以尝试输入几行消息，由于此时并没有消费者，所以这些输入的消息都会被阻塞在名为test的Topics中，直到有消费者将其消费掉位置。
+
+5、创建消息消费者，执行命令：kafka-console-consumer --zookeeper localhost:2181 --topic test --from-beginning。kafka-console-consumer命令启动的是Kafka基于命令行的消息消费客户端，在启动之后，我们马上可以在控制台中看到输出了之前我们在消息生产客户端中发送的消息。我们可以再次打开之前的消息生产客户端来发送消息，并观察消费者这边对消息的输出来体验Kafka对消息的基础处理。
+
+14.5	整合Spring Cloud Bus
+在上一篇使用Rabbit实现消息总线的案例中，我们已经通过引入spring-cloud-starter-bus-amqp模块，完成了使用RabbitMQ来实现的消息总线。
+
+若我们要使用Kafka来实现消息总线时，只需要把spring-cloud-starter-bus-amqp替换成spring-cloud-starter-bus-kafka模块，在pom.xml的dependenies节点中进行修改，具体如下：
+
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-bus-kafka</artifactId>
+</dependency>
+
+如果我们在启动Kafka时均采用了默认配置，那么我们不需要再做任何其他配置就能在本地实现从RabbitMQ到Kafka的切换。我们可以尝试把刚刚搭建的ZooKeeper、Kafka启动起来，并将修改为spring-cloud-starter-bus-kafka模块的config-server和config-client启动起来。
+
+在config-server启动时，我们可以在控制台中看到如下输出：
+
+2016-09-28 22:11:29.627  INFO 15144 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder    : Using kafka topic for outbound: springCloudBus
+2016-09-28 22:11:29.642  INFO 15144 --- [-localhost:2181] org.I0Itec.zkclient.ZkEventThread        : Starting ZkClient event thread.
+...
+016-09-28 22:11:30.290  INFO 15144 --- [           main] o.s.i.kafka.support.ProducerFactoryBean  : Using producer properties => {bootstrap.servers=localhost:9092, linger.ms=0, acks=1, compression.type=none, batch.size=16384}
+2016-09-28 22:11:30.298  INFO 15144 --- [           main] o.a.k.clients.producer.ProducerConfig    : ProducerConfig values:
+...
+2016-09-28 22:11:30.322  INFO 15144 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$1  : Adding {message-handler:outbound.springCloudBus} as a subscriber to the 'springCloudBusOutput' channel
+2016-09-28 22:11:30.322  INFO 15144 --- [           main] o.s.integration.channel.DirectChannel    : Channel 'config-server:7001.springCloudBusOutput' has 1 subscriber(s).
+2016-09-28 22:11:30.322  INFO 15144 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$1  : started outbound.springCloudBus
+...
+2016-09-28 22:11:31.465  INFO 15144 --- [           main] s.i.k.i.KafkaMessageDrivenChannelAdapter : started org.springframework.integration.kafka.inbound.KafkaMessageDrivenChannelAdapter@4178cb34
+2016-09-28 22:11:31.467  INFO 15144 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$7  : Adding {message-handler:inbound.springCloudBus.anonymous.8b9e6c7b-6a50-48c5-b981-8282a0d5a30b} as a subscriber to the 'bridge.springCloudBus' channel
+2016-09-28 22:11:31.467  INFO 15144 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$7  : started inbound.springCloudBus.anonymous.8b9e6c7b-6a50-48c5-b981-8282a0d5a30b
+
+
+
+从控制台的输出内容，我们可以看到config-server连接到了Kafka中，并使用了名为springCloudBus的Topic。
+此时，我们可以使用kafka-topics --list --zookeeper localhost:2181命令来查看当前Kafka中的Topic，若已成功启动了config-server并配置正确，我们就可以在Kafka中看到已经多了一个名为springCloudBus的Topic。
+我们再启动配置了spring-cloud-starter-bus-kafka模块的config-client，可以看到控制台中输出如下内容：
+
+
+2016-09-28 22:43:55.067  INFO 6136 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder    : Using kafka topic for outbound: springCloudBus
+2016-09-28 22:43:55.078  INFO 6136 --- [-localhost:2181] org.I0Itec.zkclient.ZkEventThread        : Starting ZkClient event thread.
+...
+2016-09-28 22:50:38.584  INFO 828 --- [           main] o.s.i.kafka.support.ProducerFactoryBean  : Using producer properties => {bootstrap.servers=localhost:9092, linger.ms=0, acks=1, compression.type=none, batch.size=16384}
+2016-09-28 22:50:38.592  INFO 828 --- [           main] o.a.k.clients.producer.ProducerConfig    : ProducerConfig values: 
+...
+2016-09-28 22:50:38.615  INFO 828 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$1  : Adding {message-handler:outbound.springCloudBus} as a subscriber to the 'springCloudBusOutput' channel
+2016-09-28 22:50:38.616  INFO 828 --- [           main] o.s.integration.channel.DirectChannel    : Channel 'didispace:7002.springCloudBusOutput' has 1 subscriber(s).
+2016-09-28 22:50:38.616  INFO 828 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$1  : started outbound.springCloudBus
+...
+2016-09-28 22:50:39.162  INFO 828 --- [           main] s.i.k.i.KafkaMessageDrivenChannelAdapter : started org.springframework.integration.kafka.inbound.KafkaMessageDrivenChannelAdapter@60cf855e
+2016-09-28 22:50:39.162  INFO 828 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$7  : Adding {message-handler:inbound.springCloudBus.anonymous.f8fc9c0c-ccd3-46dd-9537-07198f4ee216} as a subscriber to the 'bridge.springCloudBus' channel
+2016-09-28 22:50:39.163  INFO 828 --- [           main] o.s.c.s.b.k.KafkaMessageChannelBinder$7  : started inbound.springCloudBus.anonymous.f8fc9c0c-ccd3-46dd-9537-07198f4ee216
+
+
+
+可以看到，config-client启动时输出了类似的内容，他们都订阅了名为springCloudBus的Topic。
+在启动了config-server和config-client之后，为了更明显地观察消息总线刷新配置的效果，我们可以在本地启动多个不同端口的config-client。此时，我们的config-server以及多个config-client都已经连接到了由Kafka实现的消息总线上。我们可以先访问各个config-client上的/from请求，查看他获取到的配置内容。然后，修改Git中对应的参数内容，再访问各个config-client上的/from请求，可以看到配置内容并没有改变。最后，我们向config-server发送POST请求：/bus/refresh，此时我们再去访问各个config-client上的/from请求，就能获得到最新的配置信息，各客户端上的配置都已经加载为最新的Git配置内容。
+从config-client的控制台中，我们可以看到如下内容：
+
+
+2016-09-29 08:20:34.361  INFO 21256 --- [ kafka-binder-1] o.s.cloud.bus.event.RefreshListener      : Received remote refresh request. Keys refreshed [from]
+
+
+RefreshListener监听类记录了收到远程刷新请求，并刷新了from属性的日志。
+
+
+
+
+
+14.5.1	Kafka配置
+在上面的例子中，由于Kafka、ZooKeeper均运行于本地，所以我们没有在测试程序中通过配置信息来指定Kafka和ZooKeeper的配置信息，就完成了本地消息总线的试验。但是我们实际应用中，Kafka和ZooKeeper一般都会独立部署，所以在应用中都需要来为Kafka和ZooKeeper配置一些连接信息等。Kafka的整合与RabbitMQ不同，在Spring Boot 1.3.7中并没有直接提供的Starter模块，而是采用了Spring Cloud Stream的Kafka模块，所以对于Kafka的配置均采用了spring.cloud.stream.kafka的前缀，比如：
+属性名	说明	默认值
+spring.cloud.stream.kafka.binder.brokers	Kafka的服务端列表	localhost
+spring.cloud.stream.kafka.binder.defaultBrokerPort	Kafka服务端的默认端口，当brokers属性中没有配置端口信息时，就会使用这个默认端口	9092
+spring.cloud.stream.kafka.binder.zkNodes	Kafka服务端连接的ZooKeeper节点列表	localhost
+spring.cloud.stream.kafka.binder.defaultZkPort	ZooKeeper节点的默认端口，当zkNodes属性中没有配置端口信息时，就会使用这个默认端口	2181
+更多配置参数请参考官方文档
+
+
+
+
+14.6	验证实例
+
+本文完整示例：
+开源中国：http://git.oschina.net/didispace/SpringCloud-Learning/tree/master/Chapter1-1-7
+GitHub：https://github.com/dyc87112/SpringCloud-Learning/tree/master/Chapter1-1-7
+
+
+
+15	Spring Cloud构建微服务架构（八）链路追踪（Sleuth）
+
+15.1	背景
+设想这么一种情况，如果你的微服务数量逐渐增大，服务间的依赖关系越来越复杂，怎么分析它们之间的调用关系及相互的影响？
+
+15.2	服务追踪分析
+一个由微服务构成的应用系统通过服务来划分问题域，通过REST请求服务API来连接服务来完成完整业务。对于入口的一个调用可能需要有多个后台服务协同完成，链路上任何一个调用超时或出错都可能造成前端请求的失败。服务的调用链也会越来越长，并形成一个树形的调用链。
+ 
+随着服务的增多，对调用链的分析也会越来越负责。设想你在负责下面这个系统，其中每个小点都是一个微服务，他们之间的调用关系形成了复杂的网络。
+ 
+有密集恐惧症的同学就忽略吧。
+针对服务化应用全链路追踪的问题，Google发表了Dapper论文，介绍了他们如何进行服务追踪分析。其基本思路是在服务调用的请求和响应中加入ID，标明上下游请求的关系。利用这些信息，可以可视化地分析服务调用链路和服务间的依赖关系。
+
+
+
+
+15.3	Spring Cloud Sleuth & Zipkin
+对应Dpper的开源实现是Zipkin，支持多种语言包括JavaScript，Python，Java, Scala, Ruby, C#, Go等。其中Java由多种不同的库来支持。
+在这个示例中，我们准备开发两个基于Spring Cloud的应用，利用Spring Cloud Sleuth来和Zipkin进行集成。Spring Cloud Sleuth是对Zipkin的一个封装，对于Span、Trace等信息的生成、接入HTTP Request，以及向Zipkin Server发送采集信息等全部自动完成。
+
+15.3.1	Spring Cloud Sleuth概念图
+ 
+
+
+
+
+15.4	服务REST调用
+本次演示的服务有两个：tracedemo做为前端服务接收用户的请求，tracebackend为后端服务，tracedemo通过http协议调用后端服务。
+利用RestTemplate进行HTTP请求调用
+tracedemo应用通过restTemplate调用后端tracedemo服务，注意，URL中指明tracedemo的地址为backend。
+@RequestMapping("/")
+public String callHome(){
+    LOG.log(Level.INFO, "calling trace demo backend");
+    return restTemplate.getForObject("http://backend:8090", String.class);
+}
+后端服务响应HTTP请求，输出一行日志后返回经典的“hello world”。
+@RequestMapping("/")
+public String home(){
+    LOG.log(Level.INFO, "trace demo backend is being called");
+    return "Hello World.";
+}
+
+
+
+15.4.1	引入Sleuth和Zipkin依赖包
+可以看到，这是典型的两个spring应用通过RestTemplate进行访问的方式，哪在HTTP请求中注入追踪信息并把相关信息发送到Zipkin Server呢？答案在两个应用所加载的JAR包里。
+本示例采用gradle来构建应用，在build.gradle中加载了sleuth和zipkin相关的JAR包：
+dependencies {
+    compile('org.springframework.cloud:spring-cloud-starter-sleuth')
+    compile('org.springframework.cloud:spring-cloud-sleuth-zipkin')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+Spring应用在监测到Java依赖包中有sleuth和zipkin后，会自动在RestTemplate的调用过程中向HTTP请求注入追踪信息，并向Zipkin Server发送这些信息。
+哪么Zipkin Server的地址又是在哪里指定的呢？答案是在application.properties中：
+spring.zipkin.base-url=http://zipkin-server:9411
+注意Zipkin Server的地址为zipkin-server。
+
+
+15.4.2	构建Docker镜像
+为这两个服务创建相同的Dockerfile，用于生成Docker镜像：
+FROM java:8-jre-alpine
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/' /etc/apk/repositories
+VOLUME /tmp
+ADD build/libs/*.jar app.jar
+RUN sh -c 'touch /app.jar'
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+构建容器镜像的步骤如下：
+cd tracedemo
+./gradlew build
+docker build -t zipkin-demo-frontend .
+
+cd ../tracebackend
+./gradlew build
+docker build -t zipkin-demo-backend .
+构建镜像完成后用docker push命令上传到你的镜像仓库。
+
+
+
+15.5	Zipkin Server
+利用Annotation声明方式创建Zipkin
+在build.gradle中引入Zipkin依赖包。
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter')
+    compile('io.zipkin.java:zipkin-server')
+    runtime('io.zipkin.java:zipkin-autoconfigure-ui')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+在主程序Class增加一个注解@EnableZipkinServer
+@SpringBootApplication
+@EnableZipkinServer
+public class ZipkinApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ZipkinApplication.class, args);
+    }
+}
+在application.properties将端口指定为9411。
+server.port=9411
+
+
+15.5.1	构建Docker镜像
+Dockerfile和前面的两个服务一样，这里就不重复了。
+
+
+15.6	在阿里云容器服务上部署
+创建docker-compose.yml文件，内容如下：
+version: "2"
+services:
+  zipkin-server:
+    image: registry.cn-hangzhou.aliyuncs.com/jingshanlb/zipkin-demo-server
+    labels:
+      aliyun.routing.port_9411: http://zipkin
+    restart: always
+
+  frontend:
+    image: registry.cn-hangzhou.aliyuncs.com/jingshanlb/zipkin-demo-frontend
+    labels:
+      aliyun.routing.port_8080: http://frontend
+    links:
+      - zipkin-server
+      - backend
+    restart: always
+
+  backend:
+    image: registry.cn-hangzhou.aliyuncs.com/jingshanlb/zipkin-demo-backend
+    links:
+      - zipkin-server
+    restart: always
+在阿里云容器服务上使用编排模版创建应用，访问zipkin端点，可以看到服务分析的效果。
+访问前端应用3次，页面显示3次服务调用。
+ 
+点击其中任意一个trace，可以看到请求链路上不同span所花费的时间。
+ 
+进入Dependencies页面，还可以看到服务之间的依赖关系。
+ 
+从这个过程可以看出，Zipkin和Spring Cloud的集成做得很好。而且对服务追踪分析的可视化也很直观。
+注意的是，在生产环境中还需要为Zipkin配置数据库，这里就不详细介绍了。
+
+
+15.7	验证实例
+本文的示例代码在此：https://github.com/binblee/zipkin-demo
+
+
+
+
+
